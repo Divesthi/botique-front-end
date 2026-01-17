@@ -4,9 +4,18 @@ import type { Order, OrderFormData } from '../types';
 const ORDERS_ENDPOINT = '/orders';
 
 export const orderService = {
-  // Get all orders
-  getAllOrders: async (searchTerm?: string): Promise<Order[]> => {
-    const params = searchTerm ? { search: searchTerm } : {};
+  // Get all orders with optional filters
+  getAllOrders: async (searchTerm?: string, fromDate?: string, toDate?: string): Promise<Order[]> => {
+    const params: Record<string, string> = {};
+    if (searchTerm) {
+      params.search = searchTerm;
+    }
+    if (fromDate) {
+      params.fromDate = fromDate;
+    }
+    if (toDate) {
+      params.toDate = toDate;
+    }
     const response = await apiClient.get<Order[]>(ORDERS_ENDPOINT, { params });
     return response.data;
   },

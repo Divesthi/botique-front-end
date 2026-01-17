@@ -9,6 +9,7 @@ import {
   Input,
   Select,
   InputNumber,
+  DatePicker,
   message,
   Space,
   Empty,
@@ -24,6 +25,8 @@ import { orderService } from '../../services/orderService';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
+const { RangePicker } = DatePicker;
+
 const Bills: React.FC = () => {
   const navigate = useNavigate();
   const [bills, setBills] = useState<Bill[]>([]);
@@ -34,17 +37,21 @@ const Bills: React.FC = () => {
   const [editingBill, setEditingBill] = useState<Bill | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
   const [form] = Form.useForm();
 
   useEffect(() => {
     loadData();
-  }, [searchTerm]);
+  }, [searchTerm, dateRange]);
 
   const loadData = async () => {
     try {
       setLoading(true);
+      const fromDate = dateRange?.[0] ? dateRange[0].format('YYYY-MM-DD') : undefined;
+      const toDate = dateRange?.[1] ? dateRange[1].format('YYYY-MM-DD') : undefined;
+
       const [billsData, customersData, ordersData] = await Promise.all([
-        billService.getAllBills(searchTerm),
+        billService.getAllBills(searchTerm, fromDate, toDate),
         customerService.getAllCustomers(),
         orderService.getAllOrders(),
       ]);
@@ -57,6 +64,10 @@ const Bills: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleDateRangeChange = (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null) => {
+    setDateRange(dates);
   };
 
   const handleAdd = () => {
@@ -372,6 +383,13 @@ const Bills: React.FC = () => {
             style={{ width: 280 }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <RangePicker
+            placeholder={['Created From', 'Created To']}
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            allowClear
+            style={{ width: 280 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             Create Bill

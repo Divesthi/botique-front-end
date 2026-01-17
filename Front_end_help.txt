@@ -1,0 +1,15 @@
+Install Vite + React + TailWind CSS + Material TailWind
+
+https://blog.appseed.us/react-material-tailwind-guide-and-sample/
+
+https://tailwindcss.com/docs/installation/using-vite
+
+https://www.material-tailwind.com/docs/react/installation
+
+https://www.material-tailwind.com/docs/v3/html/typography
+
+https://www.npmjs.com/package/react-icons
+
+npm install
+
+npm run dev

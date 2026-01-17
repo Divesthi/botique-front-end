@@ -1,0 +1,20 @@
+Setup:
+------
+
+Get-executionpolicy
+Set-ExecutionPolicy AllSigned
+Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+choco install mysql -> Login using -> mysql -u root -p <blank> -> Change password using -> ALTER USER 'root'@'localhost' IDENTIFIED BY 'MyNewPass';
+choco install intellijidea-community
+choco install vscode
+choco install postman
+choco install openjdk
+choco install git
+choco install maven
+choco install dbeaver
+choco install nodejs (Run -> Set-ExecutionPolicy RemoteSigned -> To create react app)
+
+
+
+Divesthi => Password -> DineshDiyaAthira1!

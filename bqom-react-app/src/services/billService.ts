@@ -4,9 +4,18 @@ import type { Bill, BillFormData } from '../types';
 const BILLS_ENDPOINT = '/bills';
 
 export const billService = {
-  // Get all bills
-  getAllBills: async (searchTerm?: string): Promise<Bill[]> => {
-    const params = searchTerm ? { search: searchTerm } : {};
+  // Get all bills with optional filters
+  getAllBills: async (searchTerm?: string, fromDate?: string, toDate?: string): Promise<Bill[]> => {
+    const params: Record<string, string> = {};
+    if (searchTerm) {
+      params.search = searchTerm;
+    }
+    if (fromDate) {
+      params.fromDate = fromDate;
+    }
+    if (toDate) {
+      params.toDate = toDate;
+    }
     const response = await apiClient.get<Bill[]>(BILLS_ENDPOINT, { params });
     return response.data;
   },
