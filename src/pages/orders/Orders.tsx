@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Card,
   Table,
@@ -17,7 +17,7 @@ import {
   Divider,
   Space,
 } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, MinusCircleOutlined, SearchOutlined, EditOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../types';
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
@@ -25,8 +25,11 @@ import { measurementService } from '../../services/measurementService';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
+const { RangePicker } = DatePicker;
+
 const Orders: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [measurements, setMeasurements] = useState<CustomerMeasurement[]>([]);
@@ -34,18 +37,25 @@ const Orders: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState<[dayjs.Dayjs | null, dayjs.Dayjs | null] | null>(null);
   const [form] = Form.useForm();
   const [selectedCustomer, setSelectedCustomer] = useState<string>('');
 
+  // Get filter from URL params
+  const dashboardFilter = searchParams.get('filter');
+
   useEffect(() => {
     loadData();
-  }, [searchTerm]);
+  }, [searchTerm, dateRange]);
 
   const loadData = async () => {
     try {
       setLoading(true);
+      const fromDate = dateRange?.[0] ? dateRange[0].format('YYYY-MM-DD') : undefined;
+      const toDate = dateRange?.[1] ? dateRange[1].format('YYYY-MM-DD') : undefined;
+
       const [ordersData, customersData, measurementsData] = await Promise.all([
-        orderService.getAllOrders(searchTerm),
+        orderService.getAllOrders(searchTerm, fromDate, toDate),
         customerService.getAllCustomers(),
         measurementService.getAllMeasurements(),
       ]);
@@ -59,6 +69,74 @@ const Orders: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const handleDateRangeChange = (dates: [dayjs.Dayjs | null, dayjs.Dayjs | null] | null) => {
+    setDateRange(dates);
+  };
+
+  // Clear dashboard filter
+  const clearDashboardFilter = () => {
+    setSearchParams({});
+  };
+
+  // Get filter label for display
+  const getFilterLabel = (filter: string | null) => {
+    const labels: Record<string, string> = {
+      active: 'Active Orders (In Progress)',
+      pending: 'Pending Orders (Overdue)',
+      yet_to_deliver: 'Yet to be Delivered',
+      delivered_today: 'Delivered Today',
+      pending_delivery_today: 'Pending Delivery Today',
+    };
+    return filter ? labels[filter] || filter : '';
+  };
+
+  // Apply dashboard filter to orders
+  const getFilteredOrders = () => {
+    if (!dashboardFilter) return orders;
+
+    switch (dashboardFilter) {
+      case 'active':
+        // Active orders: status is 'in_progress'
+        return orders.filter((o) => o.status === 'in_progress');
+      case 'pending':
+        // Pending orders: status is 'fresh' or 'in_progress' and delivery date has passed
+        return orders.filter(
+          (o) =>
+            (o.status === 'fresh' || o.status === 'in_progress') &&
+            o.deliveryDate &&
+            dayjs(o.deliveryDate).isBefore(dayjs(), 'day')
+        );
+      case 'yet_to_deliver':
+        // Yet to be delivered: status is not 'delivered' and delivery date has passed
+        return orders.filter(
+          (o) =>
+            o.status !== 'delivered' &&
+            o.deliveryDate &&
+            dayjs(o.deliveryDate).isBefore(dayjs(), 'day')
+        );
+      case 'delivered_today':
+        // Delivered today: status is 'delivered' and delivery date is today
+        return orders.filter(
+          (o) =>
+            o.status === 'delivered' &&
+            o.deliveryDate &&
+            dayjs(o.deliveryDate).isSame(dayjs(), 'day')
+        );
+      case 'pending_delivery_today':
+        // Pending for delivery today: scheduled for today but not yet delivered
+        return orders.filter(
+          (o) =>
+            (o.status === 'fresh' || o.status === 'in_progress' || o.status === 'completed') &&
+            o.deliveryDate &&
+            dayjs(o.deliveryDate).isSame(dayjs(), 'day')
+        );
+      default:
+        return orders;
+    }
+  };
+
+  const filteredOrders = getFilteredOrders();
 
   const handleAdd = () => {
     setEditingOrder(null);
@@ -325,8 +403,20 @@ const Orders: React.FC = () => {
           marginBottom: 24,
         }}
       >
-        <h1>Order Management</h1>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <h1 style={{ margin: 0 }}>Order Management</h1>
+          {dashboardFilter && (
+            <Tag
+              color="blue"
+              closable
+              onClose={clearDashboardFilter}
+              style={{ fontSize: '14px', padding: '4px 8px' }}
+            >
+              {getFilterLabel(dashboardFilter)}
+            </Tag>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <Input
             placeholder="Search by customer name or phone"
             prefix={<SearchOutlined />}
@@ -334,6 +424,13 @@ const Orders: React.FC = () => {
             style={{ width: 280 }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <RangePicker
+            placeholder={['Delivery From', 'Delivery To']}
+            value={dateRange}
+            onChange={handleDateRangeChange}
+            allowClear
+            style={{ width: 280 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             Create Order
@@ -346,12 +443,12 @@ const Orders: React.FC = () => {
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <Spin size="large" />
           </div>
-        ) : orders.length === 0 ? (
-          <Empty description="No orders found" />
+        ) : filteredOrders.length === 0 ? (
+          <Empty description={dashboardFilter ? `No ${getFilterLabel(dashboardFilter).toLowerCase()} found` : 'No orders found'} />
         ) : (
           <Table
             columns={columns}
-            dataSource={orders}
+            dataSource={filteredOrders}
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: false }}
             scroll={{ x: 1800 }}

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, Row, Col, Table, Tag, Statistic, Empty, Spin, Button } from 'antd';
 import {
   DollarOutlined,
@@ -6,6 +7,7 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   ReloadOutlined,
+  CarOutlined,
 } from '@ant-design/icons';
 import type { Order, Bill } from '../../types';
 import { orderService } from '../../services/orderService';
@@ -14,6 +16,7 @@ import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -104,6 +107,22 @@ const Dashboard: React.FC = () => {
   const completedToday = orders.filter(
     (o) =>
       (o.status === 'completed' || o.status === 'delivered') &&
+      o.deliveryDate &&
+      dayjs(o.deliveryDate).isSame(dayjs(), 'day')
+  ).length;
+
+  // Orders delivered today: orders with status 'delivered' and delivery date is today
+  const deliveredToday = orders.filter(
+    (o) =>
+      o.status === 'delivered' &&
+      o.deliveryDate &&
+      dayjs(o.deliveryDate).isSame(dayjs(), 'day')
+  ).length;
+
+  // Pending for delivery today: orders scheduled for today that are not yet delivered
+  const pendingForDeliveryToday = orders.filter(
+    (o) =>
+      (o.status === 'fresh' || o.status === 'in_progress' || o.status === 'completed') &&
       o.deliveryDate &&
       dayjs(o.deliveryDate).isSame(dayjs(), 'day')
   ).length;
@@ -216,7 +235,11 @@ const Dashboard: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card
+            hoverable
+            onClick={() => navigate('/orders?filter=active')}
+            style={{ cursor: 'pointer' }}
+          >
             <Statistic
               title="Active Orders"
               value={activeOrders}
@@ -226,7 +249,11 @@ const Dashboard: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card
+            hoverable
+            onClick={() => navigate('/orders?filter=pending')}
+            style={{ cursor: 'pointer' }}
+          >
             <Statistic
               title="Pending Orders"
               value={pendingOrders}
@@ -236,7 +263,11 @@ const Dashboard: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
-          <Card>
+          <Card
+            hoverable
+            onClick={() => navigate('/orders?filter=yet_to_deliver')}
+            style={{ cursor: 'pointer' }}
+          >
             <Statistic
               title="Yet to be Delivered"
               value={ordersYetToBeDelivered}
@@ -247,7 +278,38 @@ const Dashboard: React.FC = () => {
         </Col>
       </Row>
 
-      <Card title="Recent Orders" style={{ marginTop: 16 }}>
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} sm={12} lg={6}>
+          <Card
+            hoverable
+            onClick={() => navigate('/orders?filter=delivered_today')}
+            style={{ cursor: 'pointer' }}
+          >
+            <Statistic
+              title="Delivered Today"
+              value={deliveredToday}
+              prefix={<CheckCircleOutlined />}
+              valueStyle={{ color: '#52c41a' }}
+            />
+          </Card>
+        </Col>
+        <Col xs={24} sm={12} lg={6}>
+          <Card
+            hoverable
+            onClick={() => navigate('/orders?filter=pending_delivery_today')}
+            style={{ cursor: 'pointer' }}
+          >
+            <Statistic
+              title="Pending Delivery Today"
+              value={pendingForDeliveryToday}
+              prefix={<CarOutlined />}
+              valueStyle={{ color: '#722ed1' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      <Card title="Recent Orders (Last 5)" style={{ marginTop: 16 }}>
         {loading ? (
           <div style={{ textAlign: 'center', padding: '40px 0' }}>
             <Spin size="large" />
@@ -257,9 +319,9 @@ const Dashboard: React.FC = () => {
         ) : (
           <Table
             columns={columns}
-            dataSource={orders}
+            dataSource={[...orders].sort((a, b) => b.id! - a.id!).slice(0, 5)}
             rowKey="id"
-            pagination={{ pageSize: 10, showSizeChanger: false }}
+            pagination={false}
             scroll={{ x: 1200 }}
           />
         )}
