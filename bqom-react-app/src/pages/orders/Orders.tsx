@@ -17,7 +17,7 @@ import {
   Divider,
   Space,
 } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, SearchOutlined, EditOutlined, CloseCircleOutlined } from '@ant-design/icons';
+import { PlusOutlined, MinusCircleOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
 import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../types';
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
@@ -611,7 +611,7 @@ const Orders: React.FC = () => {
                       <Input placeholder="Item remarks" />
                     </Form.Item>
 
-                    <Divider orientation="left" plain style={{ margin: '12px 0' }}>
+                    <Divider plain style={{ margin: '12px 0' }}>
                       Cost Breakdown
                     </Divider>
 
