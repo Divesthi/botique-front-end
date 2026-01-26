@@ -18,12 +18,11 @@ import {
   DatePicker,
 } from 'antd';
 import { ArrowLeftOutlined, EditOutlined, PlusOutlined, MinusCircleOutlined, SaveOutlined } from '@ant-design/icons';
-import type { Order, Customer, CustomerMeasurement, OrderItem, OrderItemCost } from '../../types';
+import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../types';
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
 import { measurementService } from '../../services/measurementService';
 import dayjs from 'dayjs';
-import type { ColumnsType } from 'antd/es/table';
 
 const OrderView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -283,7 +282,7 @@ const OrderView: React.FC = () => {
                 </Descriptions>
 
                 {/* Measurement Details */}
-                <Divider orientation="left" plain>
+                <Divider  plain>
                   Measurement Details
                   <Button
                     type="link"
@@ -305,7 +304,7 @@ const OrderView: React.FC = () => {
                 {/* Cost Breakdown */}
                 {item.itemsCost && item.itemsCost.length > 0 && (
                   <>
-                    <Divider orientation="left" plain>Cost Breakdown</Divider>
+                    <Divider  plain>Cost Breakdown</Divider>
                     <Table
                       dataSource={item.itemsCost}
                       pagination={false}
@@ -375,7 +374,7 @@ const OrderView: React.FC = () => {
           onFinish={handleSave}
         >
           {/* Main Order Details */}
-          <Divider orientation="left">Order Information</Divider>
+          <Divider >Order Information</Divider>
 
           <Space style={{ width: '100%' }} size="large">
             <Form.Item
@@ -457,7 +456,7 @@ const OrderView: React.FC = () => {
             <Input.TextArea rows={3} placeholder="Order remarks" />
           </Form.Item>
 
-          <Divider orientation="left">Order Items</Divider>
+          <Divider >Order Items</Divider>
 
           <Form.List name="orderItems">
             {(fields, { add, remove }) => (
@@ -538,7 +537,7 @@ const OrderView: React.FC = () => {
                         <Input.TextArea rows={2} placeholder="Item remarks" />
                       </Form.Item>
 
-                      <Divider orientation="left" plain style={{ margin: '12px 0' }}>
+                      <Divider  plain style={{ margin: '12px 0' }}>
                         Cost Breakdown
                       </Divider>
 

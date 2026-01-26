@@ -104,13 +104,6 @@ const Dashboard: React.FC = () => {
     dayjs(o.deliveryDate).isBefore(dayjs(), 'day')
   ).length;
 
-  const completedToday = orders.filter(
-    (o) =>
-      (o.status === 'completed' || o.status === 'delivered') &&
-      o.deliveryDate &&
-      dayjs(o.deliveryDate).isSame(dayjs(), 'day')
-  ).length;
-
   // Orders delivered today: orders with status 'delivered' and delivery date is today
   const deliveredToday = orders.filter(
     (o) =>

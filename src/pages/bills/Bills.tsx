@@ -15,7 +15,6 @@ import {
   Empty,
   Spin,
   Tag,
-  Descriptions,
 } from 'antd';
 import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import type { Bill, Customer, Order } from '../../types';
