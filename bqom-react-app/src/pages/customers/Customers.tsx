@@ -15,11 +15,13 @@ import {
 import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import type { Customer } from '../../types';
 import { customerService } from '../../services/customerService';
+import { useTenant } from '../../context/TenantContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const Customers: React.FC = () => {
   const navigate = useNavigate();
+  const { tenantCode } = useTenant();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -34,7 +36,7 @@ const Customers: React.FC = () => {
   const loadCustomers = async () => {
     try {
       setLoading(true);
-      const data = await customerService.getAllCustomers(searchTerm);
+      const data = await customerService.getAllCustomers(tenantCode, searchTerm);
       setCustomers(data);
     } catch (error) {
       message.error('Failed to load customers');
@@ -59,10 +61,10 @@ const Customers: React.FC = () => {
   const handleSubmit = async (values: any) => {
     try {
       if (editingCustomer) {
-        await customerService.updateCustomer({ ...editingCustomer, ...values });
+        await customerService.updateCustomer(tenantCode, { ...editingCustomer, ...values });
         message.success('Customer updated successfully');
       } else {
-        await customerService.createCustomer(values);
+        await customerService.createCustomer(tenantCode, values);
         message.success('Customer created successfully');
       }
       setModalVisible(false);

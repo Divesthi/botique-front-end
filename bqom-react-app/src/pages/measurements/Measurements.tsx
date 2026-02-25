@@ -18,11 +18,13 @@ import { PlusOutlined, EditOutlined, MinusCircleOutlined, SearchOutlined } from 
 import type { CustomerMeasurement, Customer } from '../../types';
 import { measurementService } from '../../services/measurementService';
 import { customerService } from '../../services/customerService';
+import { useTenant } from '../../context/TenantContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const Measurements: React.FC = () => {
   const navigate = useNavigate();
+  const { tenantCode } = useTenant();
   const [measurements, setMeasurements] = useState<CustomerMeasurement[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,8 +41,8 @@ const Measurements: React.FC = () => {
     try {
       setLoading(true);
       const [measurementsData, customersData] = await Promise.all([
-        measurementService.getAllMeasurements(searchTerm),
-        customerService.getAllCustomers(),
+        measurementService.getAllMeasurements(tenantCode, searchTerm),
+        customerService.getAllCustomers(tenantCode),
       ]);
       setMeasurements(measurementsData);
       setCustomers(customersData);
@@ -92,10 +94,10 @@ const Measurements: React.FC = () => {
       };
 
       if (editingMeasurement) {
-        await measurementService.updateMeasurement({ ...editingMeasurement, ...data });
+        await measurementService.updateMeasurement(tenantCode, { ...editingMeasurement, ...data });
         message.success('Measurement updated successfully');
       } else {
-        await measurementService.createMeasurement(data);
+        await measurementService.createMeasurement(tenantCode, data);
         message.success('Measurement created successfully');
       }
       setModalVisible(false);
@@ -162,13 +164,20 @@ const Measurements: React.FC = () => {
       key: 'measurement',
       render: (measurement: Record<string, any>) => {
         if (!measurement || Object.keys(measurement).length === 0) return '-';
+        const entries = Object.entries(measurement);
+        const visible = entries.slice(0, 5);
         return (
           <div>
-            {Object.entries(measurement).map(([key, value]) => (
+            {visible.map(([key, value]) => (
               <div key={key}>
                 <strong>{key}:</strong> {value}
               </div>
             ))}
+            {entries.length > 5 && (
+              <div style={{ color: '#888', marginTop: 2 }}>
+                +{entries.length - 5} more…
+              </div>
+            )}
           </div>
         );
       },
@@ -312,26 +321,38 @@ const Measurements: React.FC = () => {
           <Form.List name="measurementFields">
             {(fields, { add, remove }) => (
               <>
-                {fields.map(({ key, name, ...restField }) => (
-                  <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'key']}
-                      rules={[{ required: true, message: 'Missing field name' }]}
-                    >
-                      <Input placeholder="Field name (e.g., Shoulder)" style={{ width: 200 }} />
-                    </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, 'value']}
-                      rules={[{ required: true, message: 'Missing value' }]}
-                    >
-                      <Input placeholder="Value (e.g., 15 inches)" style={{ width: 200 }} />
-                    </Form.Item>
-                    <MinusCircleOutlined onClick={() => remove(name)} />
-                  </Space>
-                ))}
-                <Form.Item>
+                <div
+                  style={{
+                    maxHeight: 280,
+                    overflowY: 'auto',
+                    paddingRight: 4,
+                    marginBottom: fields.length > 0 ? 8 : 0,
+                  }}
+                >
+                  {fields.map(({ key, name, ...restField }) => (
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'key']}
+                        rules={[{ required: true, message: 'Missing field name' }]}
+                      >
+                        <Input placeholder="Field name (e.g., Shoulder)" style={{ width: 220 }} />
+                      </Form.Item>
+                      <Form.Item
+                        {...restField}
+                        name={[name, 'value']}
+                        rules={[{ required: true, message: 'Missing value' }]}
+                      >
+                        <Input placeholder="Value (e.g., 15 inches)" style={{ width: 220 }} />
+                      </Form.Item>
+                      <MinusCircleOutlined
+                        onClick={() => remove(name)}
+                        style={{ color: '#ff4d4f', fontSize: 16 }}
+                      />
+                    </Space>
+                  ))}
+                </div>
+                <Form.Item style={{ marginBottom: 0 }}>
                   <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
                     Add Measurement Field
                   </Button>

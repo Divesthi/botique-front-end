@@ -6,12 +6,14 @@ import type { Customer, Order, CustomerMeasurement } from '../../types';
 import { customerService } from '../../services/customerService';
 import { orderService } from '../../services/orderService';
 import { measurementService } from '../../services/measurementService';
+import { useTenant } from '../../context/TenantContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const CustomerView: React.FC = () => {
   const { mobileNo } = useParams<{ mobileNo: string }>();
   const navigate = useNavigate();
+  const { tenantCode } = useTenant();
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [measurements, setMeasurements] = useState<CustomerMeasurement[]>([]);
@@ -29,14 +31,14 @@ const CustomerView: React.FC = () => {
     try {
       setLoading(true);
       const [customerData, measurementsData] = await Promise.all([
-        customerService.getCustomerByMobile(mobileNo),
-        measurementService.getMeasurementsByMobile(mobileNo),
+        customerService.getCustomerByMobile(tenantCode, mobileNo),
+        measurementService.getMeasurementsByMobile(tenantCode, mobileNo),
       ]);
       setCustomer(customerData);
       setMeasurements(measurementsData);
 
       // Get all orders and filter by mobile number
-      const allOrders = await orderService.getAllOrders();
+      const allOrders = await orderService.getAllOrders(tenantCode);
       setOrders(allOrders.filter(o => o.mobileNo === mobileNo));
     } catch (error) {
       message.error('Failed to load customer data');
@@ -57,7 +59,7 @@ const CustomerView: React.FC = () => {
     if (!customer) return;
 
     try {
-      await customerService.updateCustomer({ ...customer, ...values });
+      await customerService.updateCustomer(tenantCode, { ...customer, ...values });
       message.success('Customer updated successfully');
       setEditModalVisible(false);
       form.resetFields();

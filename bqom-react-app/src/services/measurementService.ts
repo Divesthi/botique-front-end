@@ -1,31 +1,37 @@
 import apiClient from './api';
 import type { CustomerMeasurement, MeasurementFormData } from '../types';
 
-const MEASUREMENTS_ENDPOINT = '/customers/measurements';
-
 export const measurementService = {
-  // Get all measurements
-  getAllMeasurements: async (searchTerm?: string): Promise<CustomerMeasurement[]> => {
-    const params = searchTerm ? { search: searchTerm } : {};
-    const response = await apiClient.get<CustomerMeasurement[]>(MEASUREMENTS_ENDPOINT, { params });
+  getAllMeasurements: async (tenantCode: string, searchTerm?: string): Promise<CustomerMeasurement[]> => {
+    const params: Record<string, string> = {};
+    if (searchTerm) params.search = searchTerm;
+    const response = await apiClient.get<CustomerMeasurement[]>(
+      `/tenants/${tenantCode}/customers/measurements`,
+      { params }
+    );
     return response.data;
   },
 
-  // Get measurements by customer mobile number
-  getMeasurementsByMobile: async (mobileNo: string): Promise<CustomerMeasurement[]> => {
-    const response = await apiClient.get<CustomerMeasurement[]>(`${MEASUREMENTS_ENDPOINT}/${mobileNo}`);
+  getMeasurementsByMobile: async (tenantCode: string, mobileNo: string): Promise<CustomerMeasurement[]> => {
+    const response = await apiClient.get<CustomerMeasurement[]>(
+      `/tenants/${tenantCode}/customers/measurements/${mobileNo}`
+    );
     return response.data;
   },
 
-  // Create new measurement
-  createMeasurement: async (measurement: MeasurementFormData): Promise<CustomerMeasurement> => {
-    const response = await apiClient.post<CustomerMeasurement>(MEASUREMENTS_ENDPOINT, measurement);
+  createMeasurement: async (tenantCode: string, measurement: MeasurementFormData): Promise<CustomerMeasurement> => {
+    const response = await apiClient.post<CustomerMeasurement>(
+      `/tenants/${tenantCode}/customers/measurements`,
+      measurement
+    );
     return response.data;
   },
 
-  // Update measurement
-  updateMeasurement: async (measurement: CustomerMeasurement): Promise<CustomerMeasurement> => {
-    const response = await apiClient.put<CustomerMeasurement>(MEASUREMENTS_ENDPOINT, measurement);
+  updateMeasurement: async (tenantCode: string, measurement: CustomerMeasurement): Promise<CustomerMeasurement> => {
+    const response = await apiClient.put<CustomerMeasurement>(
+      `/tenants/${tenantCode}/customers/measurements`,
+      measurement
+    );
     return response.data;
   },
 };

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, theme } from 'antd';
+import { Layout, Menu, theme, Tag, Button, Tooltip } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -9,7 +9,9 @@ import {
   FileTextOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  SwapOutlined,
 } from '@ant-design/icons';
+import { useTenant } from '../context/TenantContext';
 
 const { Header, Sider, Content } = Layout;
 
@@ -17,6 +19,7 @@ const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { tenantCode, clearTenant } = useTenant();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -49,6 +52,11 @@ const MainLayout: React.FC = () => {
     },
   ];
 
+  const handleSwitchTenant = () => {
+    clearTenant();
+    navigate('/login');
+  };
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       <Sider trigger={null} collapsible collapsed={collapsed} width={250}>
@@ -64,7 +72,7 @@ const MainLayout: React.FC = () => {
             transition: 'all 0.2s',
           }}
         >
-          {collapsed ? 'BQOM' : 'BQOM'}
+          BQOM
         </div>
         <Menu
           theme="dark"
@@ -95,7 +103,19 @@ const MainLayout: React.FC = () => {
             </h2>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span>Admin</span>
+            <Tag color="geekblue" style={{ fontSize: 13, padding: '4px 10px', fontWeight: 600, letterSpacing: 1 }}>
+              {tenantCode}
+            </Tag>
+            <Tooltip title="Switch Tenant">
+              <Button
+                type="text"
+                icon={<SwapOutlined />}
+                onClick={handleSwitchTenant}
+                style={{ color: '#6366f1' }}
+              >
+                Switch Tenant
+              </Button>
+            </Tooltip>
           </div>
         </Header>
         <Content
