@@ -22,11 +22,13 @@ import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../type
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
 import { measurementService } from '../../services/measurementService';
+import { useTenant } from '../../context/TenantContext';
 import dayjs from 'dayjs';
 
 const OrderView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { tenantCode } = useTenant();
   const [order, setOrder] = useState<Order | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [measurements, setMeasurements] = useState<CustomerMeasurement[]>([]);
@@ -43,16 +45,16 @@ const OrderView: React.FC = () => {
 
     try {
       setLoading(true);
-      const allOrders = await orderService.getAllOrders();
+      const allOrders = await orderService.getAllOrders(tenantCode);
       const orderData = allOrders.find(o => o.id === parseInt(id));
 
       if (orderData) {
         setOrder(orderData);
-        const customerData = await customerService.getCustomerByMobile(orderData.mobileNo);
+        const customerData = await customerService.getCustomerByMobile(tenantCode, orderData.mobileNo);
         setCustomer(customerData);
 
         // Load measurements for the customer
-        const measurementsData = await measurementService.getMeasurementsByMobile(orderData.mobileNo);
+        const measurementsData = await measurementService.getMeasurementsByMobile(tenantCode, orderData.mobileNo);
         setMeasurements(measurementsData);
       }
     } catch (error) {
@@ -158,7 +160,7 @@ const OrderView: React.FC = () => {
         orderItems,
       };
 
-      await orderService.updateOrder(updateData);
+      await orderService.updateOrder(tenantCode, updateData);
       message.success('Order updated successfully');
       setEditModalVisible(false);
       form.resetFields();

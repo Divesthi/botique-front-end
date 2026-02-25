@@ -1,32 +1,26 @@
 import apiClient from './api';
 import type { Customer, CustomerFormData } from '../types';
 
-const CUSTOMERS_ENDPOINT = '/customers';
-
 export const customerService = {
-  // Get all customers
-  getAllCustomers: async (searchTerm?: string): Promise<Customer[]> => {
-    const params = searchTerm ? { search: searchTerm } : {};
-    const response = await apiClient.get<Customer[]>(CUSTOMERS_ENDPOINT, { params });
+  getAllCustomers: async (tenantCode: string, searchTerm?: string): Promise<Customer[]> => {
+    const params: Record<string, string> = {};
+    if (searchTerm) params.search = searchTerm;
+    const response = await apiClient.get<Customer[]>(`/tenants/${tenantCode}/customers`, { params });
     return response.data;
   },
 
-  // Get customer by mobile number
-  getCustomerByMobile: async (mobileNo: string): Promise<Customer> => {
-    const response = await apiClient.get<Customer[]>(`${CUSTOMERS_ENDPOINT}/${mobileNo}`);
-    // Backend returns an array, so we need to get the first element
+  getCustomerByMobile: async (tenantCode: string, mobileNo: string): Promise<Customer> => {
+    const response = await apiClient.get<Customer[]>(`/tenants/${tenantCode}/customers/${mobileNo}`);
     return response.data[0];
   },
 
-  // Create new customer
-  createCustomer: async (customer: CustomerFormData): Promise<Customer> => {
-    const response = await apiClient.post<Customer>(CUSTOMERS_ENDPOINT, customer);
+  createCustomer: async (tenantCode: string, customer: CustomerFormData): Promise<Customer> => {
+    const response = await apiClient.post<Customer>(`/tenants/${tenantCode}/customers`, customer);
     return response.data;
   },
 
-  // Update customer
-  updateCustomer: async (customer: Customer): Promise<Customer> => {
-    const response = await apiClient.put<Customer>(CUSTOMERS_ENDPOINT, customer);
+  updateCustomer: async (tenantCode: string, customer: Customer): Promise<Customer> => {
+    const response = await apiClient.put<Customer>(`/tenants/${tenantCode}/customers`, customer);
     return response.data;
   },
 };

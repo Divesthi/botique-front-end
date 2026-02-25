@@ -12,11 +12,13 @@ import {
 import type { Order, Bill } from '../../types';
 import { orderService } from '../../services/orderService';
 import { billService } from '../../services/billService';
+import { useTenant } from '../../context/TenantContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
+  const { tenantCode } = useTenant();
   const [orders, setOrders] = useState<Order[]>([]);
   const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,8 +46,8 @@ const Dashboard: React.FC = () => {
         setRefreshing(true);
       }
       const [ordersData, billsData] = await Promise.all([
-        orderService.getAllOrders(),
-        billService.getAllBills(),
+        orderService.getAllOrders(tenantCode),
+        billService.getAllBills(tenantCode),
       ]);
       setOrders(ordersData);
       setBills(billsData);

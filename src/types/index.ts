@@ -3,6 +3,19 @@
 export type OrderStatus = 'fresh' | 'in_progress' | 'completed' | 'delivered';
 export type BillStatus = 'fresh' | 'closed' | 'pending';
 
+export interface Tenant {
+  id?: number;
+  name: string;
+  code: string;
+  address?: string;
+  phoneNumber?: string;
+  startedDate?: string;
+  churnedDate?: string;
+  active?: boolean;
+}
+
+export interface TenantFormData extends Omit<Tenant, 'id'> {}
+
 export interface Customer {
   id?: number;
   name: string;
@@ -10,6 +23,7 @@ export interface Customer {
   address?: string;
   alternateContactNo?: string;
   tenantId?: string;
+  tenantCode?: string;
   creationDate?: string;
 }
 

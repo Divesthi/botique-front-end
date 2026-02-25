@@ -22,6 +22,7 @@ import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../type
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
 import { measurementService } from '../../services/measurementService';
+import { useTenant } from '../../context/TenantContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -29,6 +30,7 @@ const { RangePicker } = DatePicker;
 
 const Orders: React.FC = () => {
   const navigate = useNavigate();
+  const { tenantCode } = useTenant();
   const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -55,9 +57,9 @@ const Orders: React.FC = () => {
       const toDate = dateRange?.[1] ? dateRange[1].format('YYYY-MM-DD') : undefined;
 
       const [ordersData, customersData, measurementsData] = await Promise.all([
-        orderService.getAllOrders(searchTerm, fromDate, toDate),
-        customerService.getAllCustomers(),
-        measurementService.getAllMeasurements(),
+        orderService.getAllOrders(tenantCode, searchTerm, fromDate, toDate),
+        customerService.getAllCustomers(tenantCode),
+        measurementService.getAllMeasurements(tenantCode),
       ]);
       setOrders(ordersData);
       setCustomers(customersData);
@@ -204,7 +206,7 @@ const Orders: React.FC = () => {
           orderItems,
         };
 
-        await orderService.updateOrder(orderData);
+        await orderService.updateOrder(tenantCode, orderData);
         message.success('Order updated successfully');
       } else {
         // Create new order
@@ -234,7 +236,7 @@ const Orders: React.FC = () => {
           orderItems,
         };
 
-        await orderService.createOrder(orderData);
+        await orderService.createOrder(tenantCode, orderData);
         message.success('Order created successfully');
       }
 

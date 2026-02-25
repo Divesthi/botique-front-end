@@ -5,12 +5,14 @@ import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
 import type { Bill, Customer, Order } from '../../types';
 import { billService } from '../../services/billService';
 import { customerService } from '../../services/customerService';
+import { useTenant } from '../../context/TenantContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const BillView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { tenantCode } = useTenant();
   const [bill, setBill] = useState<Bill | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
@@ -24,12 +26,12 @@ const BillView: React.FC = () => {
 
     try {
       setLoading(true);
-      const allBills = await billService.getAllBills();
+      const allBills = await billService.getAllBills(tenantCode);
       const billData = allBills.find(b => b.id === parseInt(id));
 
       if (billData) {
         setBill(billData);
-        const customerData = await customerService.getCustomerByMobile(billData.mobileNo);
+        const customerData = await customerService.getCustomerByMobile(tenantCode, billData.mobileNo);
         setCustomer(customerData);
       }
     } catch (error) {
