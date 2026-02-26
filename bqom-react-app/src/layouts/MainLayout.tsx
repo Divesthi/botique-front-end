@@ -19,7 +19,7 @@ const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { tenantCode, clearTenant } = useTenant();
+  const { tenantName, clearTenant } = useTenant();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -104,7 +104,7 @@ const MainLayout: React.FC = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Tag color="geekblue" style={{ fontSize: 13, padding: '4px 10px', fontWeight: 600, letterSpacing: 1 }}>
-              {tenantCode}
+              {tenantName}
             </Tag>
             <Tooltip title="Switch Tenant">
               <Button

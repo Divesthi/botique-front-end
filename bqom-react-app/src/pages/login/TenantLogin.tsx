@@ -8,7 +8,7 @@ import { tenantService } from '../../services/tenantService';
 const { Title, Text } = Typography;
 
 const TenantLogin: React.FC = () => {
-  const { setTenantCode } = useTenant();
+  const { setTenant } = useTenant();
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ const TenantLogin: React.FC = () => {
         message.error(tenant ? 'This tenant account is inactive.' : 'Tenant code not found.');
         return;
       }
-      setTenantCode(code);
+      setTenant(code, tenant.name);
       message.success(`Welcome, ${tenant.name}!`);
       navigate('/');
     } catch {
