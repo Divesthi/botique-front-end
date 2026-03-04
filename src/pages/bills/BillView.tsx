@@ -5,14 +5,15 @@ import { ArrowLeftOutlined, EditOutlined } from '@ant-design/icons';
 import type { Bill, Customer, Order } from '../../types';
 import { billService } from '../../services/billService';
 import { customerService } from '../../services/customerService';
-import { useTenant } from '../../context/TenantContext';
+import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const BillView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tenantCode } = useTenant();
+  const { user } = useAuth();
+  const tenantCode = user?.tenantCode || '';
   const [bill, setBill] = useState<Bill | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);

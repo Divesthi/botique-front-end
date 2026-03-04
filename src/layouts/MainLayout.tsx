@@ -11,7 +11,7 @@ import {
   MenuUnfoldOutlined,
   SwapOutlined,
 } from '@ant-design/icons';
-import { useTenant } from '../context/TenantContext';
+import { useAuth } from '../context/AuthContext';
 
 const { Header, Sider, Content } = Layout;
 
@@ -19,7 +19,7 @@ const MainLayout: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { tenantCode, clearTenant } = useTenant();
+  const { user, signOut } = useAuth();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -52,8 +52,8 @@ const MainLayout: React.FC = () => {
     },
   ];
 
-  const handleSwitchTenant = () => {
-    clearTenant();
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
 
@@ -104,16 +104,16 @@ const MainLayout: React.FC = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Tag color="geekblue" style={{ fontSize: 13, padding: '4px 10px', fontWeight: 600, letterSpacing: 1 }}>
-              {tenantCode}
+              {user?.tenantCode} | {user?.role.replace('TENANT_', '')}
             </Tag>
-            <Tooltip title="Switch Tenant">
+            <Tooltip title="Logout">
               <Button
                 type="text"
                 icon={<SwapOutlined />}
-                onClick={handleSwitchTenant}
-                style={{ color: '#6366f1' }}
+                onClick={handleLogout}
+                style={{ color: '#ef4444' }}
               >
-                Switch Tenant
+                Logout
               </Button>
             </Tooltip>
           </div>

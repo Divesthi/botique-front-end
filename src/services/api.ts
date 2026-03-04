@@ -14,14 +14,15 @@ export const apiClient = axios.create({
   timeout: 10000,
 });
 
+import { supabase } from '../lib/supabase';
+
 // Request interceptor for adding auth tokens if needed
 apiClient.interceptors.request.use(
-  (config) => {
-    // Add auth token here if authentication is implemented
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+  async (config) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      config.headers.Authorization = `Bearer ${session.access_token}`;
+    }
     return config;
   },
   (error) => {

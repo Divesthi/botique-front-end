@@ -1,5 +1,16 @@
 // Type definitions for BQOM Backend API
 
+export type UserRole = 'PLATFORM_ADMIN' | 'TENANT_ADMIN' | 'TENANT_USER';
+
+export interface AuthUser {
+  id: number;
+  supabaseUid: string;
+  email: string;
+  displayName: string;
+  tenantCode: string;
+  role: UserRole;
+}
+
 export type OrderStatus = 'fresh' | 'in_progress' | 'completed' | 'delivered';
 export type BillStatus = 'fresh' | 'closed' | 'pending';
 
@@ -14,7 +25,7 @@ export interface Tenant {
   active?: boolean;
 }
 
-export interface TenantFormData extends Omit<Tenant, 'id'> {}
+export interface TenantFormData extends Omit<Tenant, 'id'> { }
 
 export interface Customer {
   id?: number;
@@ -95,10 +106,10 @@ export interface ApiResponse<T> {
 }
 
 // Form types for create/edit operations
-export interface CustomerFormData extends Omit<Customer, 'id' | 'creationDate'> {}
-export interface MeasurementFormData extends Omit<CustomerMeasurement, 'id' | 'creationDate'> {}
-export interface OrderFormData extends Omit<Order, 'id' | 'receivedDate'> {}
-export interface BillFormData extends Omit<Bill, 'id' | 'createdDate'> {}
+export interface CustomerFormData extends Omit<Customer, 'id' | 'creationDate'> { }
+export interface MeasurementFormData extends Omit<CustomerMeasurement, 'id' | 'creationDate'> { }
+export interface OrderFormData extends Omit<Order, 'id' | 'receivedDate'> { }
+export interface BillFormData extends Omit<Bill, 'id' | 'createdDate'> { }
 
 // Dashboard statistics
 export interface DashboardStats {

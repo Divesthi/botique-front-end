@@ -18,13 +18,14 @@ import { PlusOutlined, EditOutlined, MinusCircleOutlined, SearchOutlined } from 
 import type { CustomerMeasurement, Customer } from '../../types';
 import { measurementService } from '../../services/measurementService';
 import { customerService } from '../../services/customerService';
-import { useTenant } from '../../context/TenantContext';
+import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const Measurements: React.FC = () => {
   const navigate = useNavigate();
-  const { tenantCode } = useTenant();
+  const { user } = useAuth();
+  const tenantCode = user?.tenantCode || '';
   const [measurements, setMeasurements] = useState<CustomerMeasurement[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);

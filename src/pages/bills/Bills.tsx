@@ -21,7 +21,7 @@ import type { Bill, Customer, Order } from '../../types';
 import { billService } from '../../services/billService';
 import { customerService } from '../../services/customerService';
 import { orderService } from '../../services/orderService';
-import { useTenant } from '../../context/TenantContext';
+import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -29,7 +29,8 @@ const { RangePicker } = DatePicker;
 
 const Bills: React.FC = () => {
   const navigate = useNavigate();
-  const { tenantCode } = useTenant();
+  const { user } = useAuth();
+  const tenantCode = user?.tenantCode || '';
   const [bills, setBills] = useState<Bill[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);

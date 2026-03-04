@@ -22,13 +22,14 @@ import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../type
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
 import { measurementService } from '../../services/measurementService';
-import { useTenant } from '../../context/TenantContext';
+import { useAuth } from '../../context/AuthContext';
 import dayjs from 'dayjs';
 
 const OrderView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tenantCode } = useTenant();
+  const { user } = useAuth();
+  const tenantCode = user?.tenantCode || '';
   const [order, setOrder] = useState<Order | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [measurements, setMeasurements] = useState<CustomerMeasurement[]>([]);
@@ -284,7 +285,7 @@ const OrderView: React.FC = () => {
                 </Descriptions>
 
                 {/* Measurement Details */}
-                <Divider  plain>
+                <Divider plain>
                   Measurement Details
                   <Button
                     type="link"
@@ -306,7 +307,7 @@ const OrderView: React.FC = () => {
                 {/* Cost Breakdown */}
                 {item.itemsCost && item.itemsCost.length > 0 && (
                   <>
-                    <Divider  plain>Cost Breakdown</Divider>
+                    <Divider plain>Cost Breakdown</Divider>
                     <Table
                       dataSource={item.itemsCost}
                       pagination={false}
@@ -539,7 +540,7 @@ const OrderView: React.FC = () => {
                         <Input.TextArea rows={2} placeholder="Item remarks" />
                       </Form.Item>
 
-                      <Divider  plain style={{ margin: '12px 0' }}>
+                      <Divider plain style={{ margin: '12px 0' }}>
                         Cost Breakdown
                       </Divider>
 

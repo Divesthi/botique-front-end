@@ -22,7 +22,7 @@ import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../type
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
 import { measurementService } from '../../services/measurementService';
-import { useTenant } from '../../context/TenantContext';
+import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
@@ -30,7 +30,8 @@ const { RangePicker } = DatePicker;
 
 const Orders: React.FC = () => {
   const navigate = useNavigate();
-  const { tenantCode } = useTenant();
+  const { user } = useAuth();
+  const tenantCode = user?.tenantCode || '';
   const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState<Order[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);

@@ -5,13 +5,14 @@ import { ArrowLeftOutlined, EditOutlined, PlusOutlined, MinusCircleOutlined } fr
 import type { CustomerMeasurement, Customer } from '../../types';
 import { measurementService } from '../../services/measurementService';
 import { customerService } from '../../services/customerService';
-import { useTenant } from '../../context/TenantContext';
+import { useAuth } from '../../context/AuthContext';
 import dayjs from 'dayjs';
 
 const MeasurementView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tenantCode } = useTenant();
+  const { user } = useAuth();
+  const tenantCode = user?.tenantCode || '';
   const [measurement, setMeasurement] = useState<CustomerMeasurement | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);

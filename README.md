@@ -46,8 +46,9 @@ A professional React-based web application for managing boutique orders, custome
 - **TypeScript** - Type-safe development
 - **Vite** - Fast build tool and dev server
 - **Ant Design** - Professional UI component library
-- **React Router** - Client-side routing
-- **Axios** - HTTP client for API calls
+- **React Router** - Client-side role-based routing
+- **Supabase JS** - User authentication and session management
+- **Axios** - HTTP client for API calls with token interceptors
 - **Day.js** - Date formatting and manipulation
 
 ## Quick Start
@@ -76,10 +77,24 @@ The application will be available at: http://localhost:5173
 
 ### Environment Configuration
 
-Create or edit `.env` file:
-```
+Create or edit `.env` file in the root of the frontend project:
+```env
 VITE_API_BASE_URL=http://localhost:8080
+
+# Supabase Authentication Keys
+# Get these from your Supabase Dashboard -> Settings -> API
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
+
+### Authentication & Routing
+
+The application uses **Supabase Authentication** integrated with a Spring Boot backend.
+1. The user logs in via the central Email/Password sign-in screen.
+2. The `AuthContext` retrieves the Supabase JWT and fetches the user's role and tenant from the BQOM backend.
+3. Users are automatically routed based on their privileges:
+   - `PLATFORM_ADMIN` → Routed to the global Admin Panel (`/admin/*`)
+   - `TENANT_ADMIN` & `TENANT_USER` → Routed to their specific boutique dashboard (`/*`)
 
 ## Documentation
 

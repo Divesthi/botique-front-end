@@ -1,11 +1,12 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { ConfigProvider } from 'antd';
-import { TenantProvider, useTenant } from './context/TenantContext';
+import { ConfigProvider, Spin } from 'antd';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import MainLayout from './layouts/MainLayout';
 import AdminLayout from './layouts/AdminLayout';
-import TenantLogin from './pages/login/TenantLogin';
+import Login from './pages/login/TenantLogin';
 import TenantsAdmin from './pages/admin/TenantsAdmin';
+import UsersAdmin from './pages/admin/UsersAdmin';
 import Dashboard from './pages/dashboard/Dashboard';
 import Customers from './pages/customers/Customers';
 import CustomerView from './pages/customers/CustomerView';
@@ -16,10 +17,38 @@ import OrderView from './pages/orders/OrderView';
 import Bills from './pages/bills/Bills';
 import BillView from './pages/bills/BillView';
 
-// Guard: redirect to /login if no tenant code is set
-const RequireTenant: React.FC = () => {
-  const { tenantCode } = useTenant();
-  return tenantCode ? <Outlet /> : <Navigate to="/login" replace />;
+// Guard: redirect to /login if no valid session/profile
+const RequireAuth: React.FC = () => {
+  const { session, user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  return session && user ? <Outlet /> : <Navigate to="/login" replace />;
+};
+
+// Guard: redirect if user is not a PLATFORM_ADMIN
+const RequirePlatformAdmin: React.FC = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  return user?.role === 'PLATFORM_ADMIN' ? <Outlet /> : <Navigate to="/" replace />;
+};
+
+// Guard: redirect if user is PLATFORM_ADMIN trying to access tenant routes directly without tenant context
+const RequireTenantScope: React.FC = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  // Platform admins should use the admin dashboard, not the tenant dashboard
+  return user?.role === 'PLATFORM_ADMIN' ? <Navigate to="/admin/tenants" replace /> : <Outlet />;
 };
 
 function App() {
@@ -32,30 +61,37 @@ function App() {
         },
       }}
     >
-      <TenantProvider>
+      <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Public: tenant code entry screen */}
-            <Route path="/login" element={<TenantLogin />} />
+            {/* Public: login screen */}
+            <Route path="/login" element={<Login />} />
 
-            {/* Public: admin panel — no tenant code needed */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="/admin/tenants" replace />} />
-              <Route path="tenants" element={<TenantsAdmin />} />
-            </Route>
+            {/* Protected: All routes require authentication */}
+            <Route element={<RequireAuth />}>
 
-            {/* Protected: require tenant code */}
-            <Route element={<RequireTenant />}>
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="customers" element={<Customers />} />
-                <Route path="customers/:mobileNo" element={<CustomerView />} />
-                <Route path="measurements" element={<Measurements />} />
-                <Route path="measurements/:id" element={<MeasurementView />} />
-                <Route path="orders" element={<Orders />} />
-                <Route path="orders/:id" element={<OrderView />} />
-                <Route path="bills" element={<Bills />} />
-                <Route path="bills/:id" element={<BillView />} />
+              {/* Admin Panel: Only for PLATFORM_ADMIN */}
+              <Route element={<RequirePlatformAdmin />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<Navigate to="/admin/tenants" replace />} />
+                  <Route path="tenants" element={<TenantsAdmin />} />
+                  <Route path="users" element={<UsersAdmin />} />
+                </Route>
+              </Route>
+
+              {/* Tenant Panel: For TENANT_ADMIN and TENANT_USER */}
+              <Route element={<RequireTenantScope />}>
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="customers" element={<Customers />} />
+                  <Route path="customers/:mobileNo" element={<CustomerView />} />
+                  <Route path="measurements" element={<Measurements />} />
+                  <Route path="measurements/:id" element={<MeasurementView />} />
+                  <Route path="orders" element={<Orders />} />
+                  <Route path="orders/:id" element={<OrderView />} />
+                  <Route path="bills" element={<Bills />} />
+                  <Route path="bills/:id" element={<BillView />} />
+                </Route>
               </Route>
             </Route>
 
@@ -63,7 +99,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
-      </TenantProvider>
+      </AuthProvider>
     </ConfigProvider>
   );
 }

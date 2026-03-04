@@ -15,13 +15,14 @@ import {
 import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
 import type { Customer } from '../../types';
 import { customerService } from '../../services/customerService';
-import { useTenant } from '../../context/TenantContext';
+import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const Customers: React.FC = () => {
   const navigate = useNavigate();
-  const { tenantCode } = useTenant();
+  const { user } = useAuth();
+  const tenantCode = user?.tenantCode || '';
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);

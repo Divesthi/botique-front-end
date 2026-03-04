@@ -1,32 +1,46 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, message, Spin, Divider } from 'antd';
-import { ShopOutlined, SettingOutlined } from '@ant-design/icons';
-import { useTenant } from '../../context/TenantContext';
-import { tenantService } from '../../services/tenantService';
+import { ShopOutlined, LockOutlined, UserOutlined } from '@ant-design/icons';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
 
 const { Title, Text } = Typography;
 
-const TenantLogin: React.FC = () => {
-  const { setTenantCode } = useTenant();
+const Login: React.FC = () => {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const { session, user } = useAuth();
 
-  const handleSubmit = async (values: { tenantCode: string }) => {
-    const code = values.tenantCode.trim();
+  // If already logged in and profile loaded, redirect based on role
+  React.useEffect(() => {
+    if (session && user) {
+      if (user.role === 'PLATFORM_ADMIN') {
+        navigate('/admin/tenants');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [session, user, navigate]);
+
+  const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
-      const tenant = await tenantService.getTenantByCode(code);
-      if (!tenant || !tenant.active) {
-        message.error(tenant ? 'This tenant account is inactive.' : 'Tenant code not found.');
-        return;
+      const { error } = await supabase.auth.signInWithPassword({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (error) {
+        throw error;
       }
-      setTenantCode(code);
-      message.success(`Welcome, ${tenant.name}!`);
-      navigate('/');
-    } catch {
-      message.error('Invalid tenant code. Please check and try again.');
+
+      // The AuthContext will automatically detect the auth change, 
+      // fetch the user profile, and the useEffect above will redirect them.
+      message.success('Login successful!');
+    } catch (error: any) {
+      message.error(error.message || 'Invalid login credentials.');
     } finally {
       setLoading(false);
     }
@@ -74,32 +88,45 @@ const TenantLogin: React.FC = () => {
         </div>
 
         <Title level={4} style={{ marginBottom: 8, color: '#374151' }}>
-          Enter Tenant Code
+          Sign In
         </Title>
         <Text type="secondary" style={{ display: 'block', marginBottom: 24, fontSize: 13 }}>
-          Enter your organisation's unique tenant code to continue.
+          Enter your email and password to access your account.
         </Text>
 
         <Spin spinning={loading}>
           <Form form={form} layout="vertical" onFinish={handleSubmit}>
             <Form.Item
-              name="tenantCode"
-              label="Tenant Code"
+              name="email"
+              label="Email Address"
               rules={[
-                { required: true, message: 'Please enter your tenant code' },
-                { min: 2, message: 'Tenant code must be at least 2 characters' },
+                { required: true, message: 'Please enter your email' },
+                { type: 'email', message: 'Please enter a valid email' },
               ]}
             >
               <Input
+                prefix={<UserOutlined style={{ color: '#bfbfbf' }} />}
                 size="large"
-                placeholder="e.g. BOUTIQUE01"
+                placeholder="admin@example.com"
                 autoFocus
-                autoComplete="off"
-                style={{ letterSpacing: 1 }}
+                autoComplete="email"
               />
             </Form.Item>
 
-            <Form.Item style={{ marginBottom: 0 }}>
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[{ required: true, message: 'Please enter your password' }]}
+            >
+              <Input.Password
+                prefix={<LockOutlined style={{ color: '#bfbfbf' }} />}
+                size="large"
+                placeholder="••••••••"
+                autoComplete="current-password"
+              />
+            </Form.Item>
+
+            <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
               <Button
                 type="primary"
                 htmlType="submit"
@@ -108,27 +135,21 @@ const TenantLogin: React.FC = () => {
                 loading={loading}
                 style={{ height: 48, fontSize: 16, fontWeight: 600 }}
               >
-                Continue
+                Sign In
               </Button>
             </Form.Item>
           </Form>
         </Spin>
 
         <Divider style={{ margin: '24px 0 16px' }} />
-
         <div style={{ textAlign: 'center' }}>
-          <Button
-            type="text"
-            icon={<SettingOutlined />}
-            onClick={() => navigate('/admin/tenants')}
-            style={{ color: '#6b7280', fontSize: 13 }}
-          >
-            Admin — Manage Tenants
-          </Button>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            Platform Admin & Tenant Users login here.
+          </Text>
         </div>
       </Card>
     </div>
   );
 };
 
-export default TenantLogin;
+export default Login;
