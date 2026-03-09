@@ -7,7 +7,9 @@ export interface AuthUser {
   supabaseUid: string;
   email: string;
   displayName: string;
+  phoneNumber?: string;
   tenantCode: string;
+  tenantName?: string;
   role: UserRole;
 }
 

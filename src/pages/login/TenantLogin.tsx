@@ -17,7 +17,7 @@ const Login: React.FC = () => {
   React.useEffect(() => {
     if (session && user) {
       if (user.role === 'PLATFORM_ADMIN') {
-        navigate('/admin/tenants');
+        navigate('/admin/users');
       } else {
         navigate('/');
       }

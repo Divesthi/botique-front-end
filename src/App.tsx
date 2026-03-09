@@ -16,6 +16,7 @@ import Orders from './pages/orders/Orders';
 import OrderView from './pages/orders/OrderView';
 import Bills from './pages/bills/Bills';
 import BillView from './pages/bills/BillView';
+import Revenue from './pages/revenue/Revenue';
 
 // Guard: redirect to /login if no valid session/profile
 const RequireAuth: React.FC = () => {
@@ -41,6 +42,13 @@ const RequirePlatformAdmin: React.FC = () => {
   return user?.role === 'PLATFORM_ADMIN' ? <Outlet /> : <Navigate to="/" replace />;
 };
 
+// Guard: redirect if user is not a TENANT_ADMIN or PLATFORM_ADMIN
+const RequireTenantAdmin: React.FC = () => {
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  return (user?.role === 'TENANT_ADMIN' || user?.role === 'PLATFORM_ADMIN') ? <Outlet /> : <Navigate to="/" replace />;
+};
+
 // Guard: redirect if user is PLATFORM_ADMIN trying to access tenant routes directly without tenant context
 const RequireTenantScope: React.FC = () => {
   const { user, loading } = useAuth();
@@ -48,7 +56,7 @@ const RequireTenantScope: React.FC = () => {
   if (loading) return null;
 
   // Platform admins should use the admin dashboard, not the tenant dashboard
-  return user?.role === 'PLATFORM_ADMIN' ? <Navigate to="/admin/tenants" replace /> : <Outlet />;
+  return user?.role === 'PLATFORM_ADMIN' ? <Navigate to="/admin/users" replace /> : <Outlet />;
 };
 
 function App() {
@@ -73,7 +81,7 @@ function App() {
               {/* Admin Panel: Only for PLATFORM_ADMIN */}
               <Route element={<RequirePlatformAdmin />}>
                 <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<Navigate to="/admin/tenants" replace />} />
+                  <Route index element={<Navigate to="/admin/users" replace />} />
                   <Route path="tenants" element={<TenantsAdmin />} />
                   <Route path="users" element={<UsersAdmin />} />
                 </Route>
@@ -91,6 +99,11 @@ function App() {
                   <Route path="orders/:id" element={<OrderView />} />
                   <Route path="bills" element={<Bills />} />
                   <Route path="bills/:id" element={<BillView />} />
+
+                  {/* Tenant Admin Only: Revenue */}
+                  <Route element={<RequireTenantAdmin />}>
+                    <Route path="revenue" element={<Revenue />} />
+                  </Route>
                 </Route>
               </Route>
             </Route>

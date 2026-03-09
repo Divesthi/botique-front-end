@@ -55,10 +55,11 @@ const UsersAdmin: React.FC = () => {
             await userService.createUser({
                 email: values.email,
                 displayName: values.displayName,
+                phoneNumber: values.phoneNumber,
                 role: values.role,
                 tenantCode: values.tenantCode,
             });
-            message.success('User created successfully. An invite email has been sent.');
+            message.success('User registered successfully.');
             setModalVisible(false);
             form.resetFields();
             loadData();
@@ -101,6 +102,12 @@ const UsersAdmin: React.FC = () => {
             key: 'email',
             width: 250,
             sorter: (a, b) => a.email.localeCompare(b.email),
+        },
+        {
+            title: 'Phone',
+            dataIndex: 'phoneNumber',
+            key: 'phoneNumber',
+            width: 150,
         },
         {
             title: 'Role',
@@ -207,7 +214,7 @@ const UsersAdmin: React.FC = () => {
                 }}
                 onOk={() => form.submit()}
                 width={500}
-                okText="Create & Send Invite"
+                okText="Add User"
             >
                 <Form form={form} layout="vertical" onFinish={handleSubmit}>
                     <Form.Item
@@ -227,6 +234,14 @@ const UsersAdmin: React.FC = () => {
                         rules={[{ required: true, message: 'Please enter display name' }]}
                     >
                         <Input placeholder="e.g. John Doe" />
+                    </Form.Item>
+
+                    <Form.Item
+                        name="phoneNumber"
+                        label="Phone Number"
+                        rules={[{ required: false }]}
+                    >
+                        <Input placeholder="e.g. +1234567890" />
                     </Form.Item>
 
                     <Form.Item

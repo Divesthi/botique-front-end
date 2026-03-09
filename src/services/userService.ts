@@ -8,7 +8,7 @@ export const userService = {
         return response.data;
     },
 
-    createUser: async (payload: { email: string; displayName: string; role: string; tenantCode: string }): Promise<AuthUser> => {
+    createUser: async (payload: { email: string; displayName: string; phoneNumber?: string; role: string; tenantCode: string }): Promise<AuthUser> => {
         const response = await apiClient.post('/auth/register', payload);
         return response.data;
     },

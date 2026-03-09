@@ -10,6 +10,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   SwapOutlined,
+  DollarOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 
@@ -50,6 +51,12 @@ const MainLayout: React.FC = () => {
       icon: <FileTextOutlined />,
       label: 'Bills',
     },
+    // Only show Revenue to TENANT_ADMIN or PLATFORM_ADMIN
+    ...((user?.role === 'TENANT_ADMIN' || user?.role === 'PLATFORM_ADMIN') ? [{
+      key: '/revenue',
+      icon: <DollarOutlined />,
+      label: 'Revenue',
+    }] : []),
   ];
 
   const handleLogout = async () => {
@@ -104,7 +111,7 @@ const MainLayout: React.FC = () => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <Tag color="geekblue" style={{ fontSize: 13, padding: '4px 10px', fontWeight: 600, letterSpacing: 1 }}>
-              {user?.tenantCode} | {user?.role.replace('TENANT_', '')}
+              {user?.tenantName || user?.tenantCode} | {user?.role.replace('TENANT_', '')}
             </Tag>
             <Tooltip title="Logout">
               <Button

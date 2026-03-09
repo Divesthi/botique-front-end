@@ -2,16 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, Row, Col, Table, Tag, Statistic, Empty, Spin, Button } from 'antd';
 import {
-  DollarOutlined,
   ShoppingOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
   ReloadOutlined,
   CarOutlined,
 } from '@ant-design/icons';
-import type { Order, Bill } from '../../types';
+import type { Order } from '../../types';
 import { orderService } from '../../services/orderService';
-import { billService } from '../../services/billService';
 import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -21,7 +19,6 @@ const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const tenantCode = user?.tenantCode || '';
   const [orders, setOrders] = useState<Order[]>([]);
-  const [bills, setBills] = useState<Bill[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
@@ -46,12 +43,8 @@ const Dashboard: React.FC = () => {
       if (showRefreshing && !showLoading) {
         setRefreshing(true);
       }
-      const [ordersData, billsData] = await Promise.all([
-        orderService.getAllOrders(tenantCode),
-        billService.getAllBills(tenantCode),
-      ]);
+      const ordersData = await orderService.getAllOrders(tenantCode);
       setOrders(ordersData);
-      setBills(billsData);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Failed to load data:', error);
@@ -90,7 +83,6 @@ const Dashboard: React.FC = () => {
   };
 
   // Calculate statistics
-  const totalRevenue = bills.reduce((sum, bill) => sum + bill.totalAmount, 0);
   const activeOrders = orders.filter((o) => o.status === 'in_progress').length;
 
   // Pending orders: orders with status 'fresh' or 'in_progress' that have passed the delivery date
@@ -219,18 +211,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} lg={6}>
-          <Card>
-            <Statistic
-              title="Total Revenue"
-              value={totalRevenue}
-              precision={2}
-              prefix={<DollarOutlined />}
-              valueStyle={{ color: '#3f8600' }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             onClick={() => navigate('/orders?filter=active')}
@@ -244,7 +225,7 @@ const Dashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             onClick={() => navigate('/orders?filter=pending')}
@@ -258,7 +239,7 @@ const Dashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} lg={6}>
+        <Col xs={24} sm={12} lg={8}>
           <Card
             hoverable
             onClick={() => navigate('/orders?filter=yet_to_deliver')}
