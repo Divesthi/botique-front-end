@@ -99,12 +99,12 @@ const Dashboard: React.FC = () => {
     dayjs(o.deliveryDate).isBefore(dayjs(), 'day')
   ).length;
 
-  // Orders delivered today: orders with status 'delivered' and delivery date is today
+  // Orders delivered today: orders with status 'delivered' and deliveredDate is today
   const deliveredToday = orders.filter(
     (o) =>
       o.status === 'delivered' &&
-      o.deliveryDate &&
-      dayjs(o.deliveryDate).isSame(dayjs(), 'day')
+      o.deliveredDate &&
+      dayjs(o.deliveredDate).isSame(dayjs(), 'day')
   ).length;
 
   // Pending for delivery today: orders scheduled for today that are not yet delivered
@@ -194,11 +194,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="page-header-bar">
         <h1 style={{ margin: 0 }}>Dashboard</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <span style={{ color: '#888', fontSize: '14px' }}>
-            Last updated: {dayjs(lastUpdated).format('HH:mm:ss')}
+            Updated: {dayjs(lastUpdated).format('HH:mm:ss')}
           </span>
           <Button
             icon={<ReloadOutlined spin={refreshing} />}

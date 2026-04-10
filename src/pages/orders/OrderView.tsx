@@ -138,7 +138,7 @@ const OrderView: React.FC = () => {
         quantity: item.quantity,
         costPerQuantity: item.costPerQuantity,
         remarks: item.remarks,
-        status: item.status || 'in_progress',
+        status: values.status === 'delivered' ? 'delivered' : (item.status || 'in_progress'),
         itemsCost: (item.itemsCost || []).map((cost: any) => ({
           cost: cost.cost,
           type: cost.type,
@@ -209,7 +209,7 @@ const OrderView: React.FC = () => {
       </div>
 
       <Card title={`Order #${order.id}`} style={{ marginBottom: 24 }}>
-        <Descriptions bordered column={2}>
+        <Descriptions bordered column={{ xs: 1, sm: 2 }}>
           <Descriptions.Item label="Order ID">{order.id}</Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={getStatusColor(order.status)}>{getStatusLabel(order.status)}</Tag>
@@ -260,7 +260,7 @@ const OrderView: React.FC = () => {
                 title={`Item ${index + 1}: ${measurementDetails.dressType}`}
                 style={{ marginBottom: 16 }}
               >
-                <Descriptions bordered column={2} size="small">
+                <Descriptions bordered column={{ xs: 1, sm: 2 }} size="small">
                   <Descriptions.Item label="Customer Name">{measurementDetails.name}</Descriptions.Item>
                   <Descriptions.Item label="Dress Type">{measurementDetails.dressType}</Descriptions.Item>
                   <Descriptions.Item label="Quantity">{item.quantity}</Descriptions.Item>
@@ -367,7 +367,7 @@ const OrderView: React.FC = () => {
           form.resetFields();
         }}
         onOk={() => form.submit()}
-        width={1000}
+        width="min(1000px, calc(100vw - 32px))"
         okText="Save Changes"
         okButtonProps={{ icon: <SaveOutlined /> }}
       >
@@ -379,7 +379,7 @@ const OrderView: React.FC = () => {
           {/* Main Order Details */}
           <Divider >Order Information</Divider>
 
-          <Space style={{ width: '100%' }} size="large">
+          <Space style={{ width: '100%' }} size="large" wrap>
             <Form.Item
               name="totalItems"
               label="Total Items"
@@ -405,7 +405,7 @@ const OrderView: React.FC = () => {
             </Form.Item>
           </Space>
 
-          <Space style={{ width: '100%' }} size="large">
+          <Space style={{ width: '100%' }} size="large" wrap>
             <Form.Item name="deliveryDate" label="Delivery Date">
               <DatePicker style={{ width: 200 }} />
             </Form.Item>
@@ -419,7 +419,7 @@ const OrderView: React.FC = () => {
             </Form.Item>
           </Space>
 
-          <Space style={{ width: '100%' }} size="large">
+          <Space style={{ width: '100%' }} size="large" wrap>
             <Form.Item
               name="total"
               label="Total Amount"
@@ -500,7 +500,7 @@ const OrderView: React.FC = () => {
                         />
                       </Form.Item>
 
-                      <Space style={{ width: '100%' }} size="large">
+                      <Space style={{ width: '100%' }} size="large" wrap>
                         <Form.Item
                           {...restField}
                           name={[name, 'quantity']}
@@ -548,7 +548,7 @@ const OrderView: React.FC = () => {
                         {(costFields, { add: addCost, remove: removeCost }) => (
                           <>
                             {costFields.map(({ key: costKey, name: costName, ...costRestField }) => (
-                              <Space key={costKey} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                              <Space key={costKey} style={{ display: 'flex', marginBottom: 8 }} align="baseline" wrap>
                                 <Form.Item
                                   {...costRestField}
                                   name={[costName, 'type']}

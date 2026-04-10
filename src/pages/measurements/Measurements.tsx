@@ -14,7 +14,8 @@ import {
   Spin,
   Divider,
 } from 'antd';
-import { PlusOutlined, EditOutlined, MinusCircleOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, MinusCircleOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { Popconfirm } from 'antd';
 import type { CustomerMeasurement, Customer } from '../../types';
 import { measurementService } from '../../services/measurementService';
 import { customerService } from '../../services/customerService';
@@ -76,6 +77,17 @@ const Measurements: React.FC = () => {
     setModalVisible(true);
   };
 
+  const handleDelete = async (measurementId: number) => {
+    try {
+      await measurementService.deleteMeasurement(tenantCode, measurementId);
+      message.success('Measurement deleted successfully');
+      loadData();
+    } catch (error) {
+      message.error('Failed to delete measurement');
+      console.error('Failed to delete measurement:', error);
+    }
+  };
+
   const handleSubmit = async (values: any) => {
     try {
       // Convert measurement fields array to object
@@ -116,22 +128,6 @@ const Measurements: React.FC = () => {
   };
 
   const columns: ColumnsType<CustomerMeasurement> = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-      sorter: (a, b) => a.id! - b.id!,
-      defaultSortOrder: 'descend',
-      render: (id: number) => (
-        <Button type="link" onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/measurements/${id}`);
-        }}>
-          #{id}
-        </Button>
-      ),
-    },
     {
       title: 'Customer Name',
       dataIndex: 'mobileNo',
@@ -191,44 +187,43 @@ const Measurements: React.FC = () => {
       width: 150,
     },
     {
-      title: 'Created Date',
-      dataIndex: 'creationDate',
-      key: 'creationDate',
-      width: 150,
-      render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
-    },
-    {
       title: 'Actions',
       key: 'actions',
-      width: 120,
+      width: 80,
       fixed: 'right',
+      onHeaderCell: () => ({ style: { backgroundColor: '#F0E8E2' } }),
+      onCell: () => ({ style: { backgroundColor: '#ffffff' } }),
       render: (_, record) => (
-        <Space>
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            Edit
-          </Button>
-        </Space>
+        <Popconfirm
+          title="Delete Measurement"
+          description="Are you sure? This cannot be undone."
+          onConfirm={(e) => { e?.stopPropagation(); handleDelete(record.id!); }}
+          onCancel={(e) => e?.stopPropagation()}
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
+        >
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Popconfirm>
       ),
     },
   ];
 
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}
-      >
+      <div className="page-header-bar">
         <h1>Measurement Management</h1>
-        <Space>
+        <Space wrap>
           <Input
             placeholder="Search by name, phone, or dress type"
             prefix={<SearchOutlined />}
             allowClear
-            style={{ width: 300 }}
+            style={{ width: 280, minWidth: 180 }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -248,7 +243,11 @@ const Measurements: React.FC = () => {
         ) : (
           <Table
             columns={columns}
-            dataSource={measurements}
+            dataSource={[...measurements].sort((a, b) => {
+              const aDate = a.updatedDate || a.creationDate;
+              const bDate = b.updatedDate || b.creationDate;
+              return dayjs(bDate || 0).valueOf() - dayjs(aDate || 0).valueOf();
+            })}
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: false }}
             scroll={{ x: 1400 }}

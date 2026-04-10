@@ -17,7 +17,8 @@ import {
   Divider,
   Space,
 } from 'antd';
-import { PlusOutlined, MinusCircleOutlined, SearchOutlined, EditOutlined } from '@ant-design/icons';
+import { PlusOutlined, MinusCircleOutlined, SearchOutlined, DeleteOutlined } from '@ant-design/icons';
+import { Popconfirm } from 'antd';
 import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../types';
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
@@ -119,12 +120,12 @@ const Orders: React.FC = () => {
             dayjs(o.deliveryDate).isBefore(dayjs(), 'day')
         );
       case 'delivered_today':
-        // Delivered today: status is 'delivered' and delivery date is today
+        // Delivered today: status is 'delivered' and deliveredDate is today
         return orders.filter(
           (o) =>
             o.status === 'delivered' &&
-            o.deliveryDate &&
-            dayjs(o.deliveryDate).isSame(dayjs(), 'day')
+            o.deliveredDate &&
+            dayjs(o.deliveredDate).isSame(dayjs(), 'day')
         );
       case 'pending_delivery_today':
         // Pending for delivery today: scheduled for today but not yet delivered
@@ -140,6 +141,17 @@ const Orders: React.FC = () => {
   };
 
   const filteredOrders = getFilteredOrders();
+
+  const handleDelete = async (orderId: number) => {
+    try {
+      await orderService.deleteOrder(tenantCode, orderId);
+      message.success('Order deleted successfully');
+      loadData();
+    } catch (error) {
+      message.error('Failed to delete order');
+      console.error('Failed to delete order:', error);
+    }
+  };
 
   const handleAdd = () => {
     setEditingOrder(null);
@@ -187,7 +199,7 @@ const Orders: React.FC = () => {
           quantity: item.quantity,
           costPerQuantity: item.costPerQuantity,
           remarks: item.remarks,
-          status: item.status || 'in_progress',
+          status: values.status === 'delivered' ? 'delivered' : (item.status || 'in_progress'),
           itemsCost: (item.itemsCost || []).map((cost: any) => ({
             cost: cost.cost,
             type: cost.type,
@@ -278,23 +290,27 @@ const Orders: React.FC = () => {
 
   const customerMeasurements = measurements.filter((m) => m.mobileNo === selectedCustomer);
 
+  const handleOrderFormValuesChange = (changedValues: any, allValues: any) => {
+    // Auto-calculate balance = total - advance
+    if ('total' in changedValues || 'advance' in changedValues) {
+      const total = allValues.total || 0;
+      const advance = allValues.advance || 0;
+      form.setFieldValue('balance', Math.max(0, total - advance));
+    }
+
+    // Auto-populate costPerQuantity from cost breakdown sum
+    if (changedValues.orderItems) {
+      changedValues.orderItems.forEach((item: any, index: number) => {
+        if (item && 'itemsCost' in item) {
+          const costs = allValues.orderItems?.[index]?.itemsCost || [];
+          const sum = costs.reduce((acc: number, c: any) => acc + (Number(c?.cost) || 0), 0);
+          form.setFieldValue(['orderItems', index, 'costPerQuantity'], sum);
+        }
+      });
+    }
+  };
+
   const columns: ColumnsType<Order> = [
-    {
-      title: 'Order ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 100,
-      sorter: (a, b) => a.id! - b.id!,
-      defaultSortOrder: 'descend',
-      render: (id: number) => (
-        <Button type="link" onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/orders/${id}`);
-        }}>
-          #{id}
-        </Button>
-      ),
-    },
     {
       title: 'Customer',
       dataIndex: 'mobileNo',
@@ -314,18 +330,6 @@ const Orders: React.FC = () => {
       dataIndex: 'totalItems',
       key: 'totalItems',
       width: 120,
-    },
-    {
-      title: 'Received Date',
-      dataIndex: 'receivedDate',
-      key: 'receivedDate',
-      width: 150,
-      sorter: (a, b) => {
-        if (!a.receivedDate) return 1;
-        if (!b.receivedDate) return -1;
-        return dayjs(a.receivedDate).valueOf() - dayjs(b.receivedDate).valueOf();
-      },
-      render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
     },
     {
       title: 'Delivery Date',
@@ -379,34 +383,35 @@ const Orders: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 120,
+      width: 80,
       fixed: 'right',
+      onHeaderCell: () => ({ style: { backgroundColor: '#F0E8E2' } }),
+      onCell: () => ({ style: { backgroundColor: '#ffffff' } }),
       render: (_, record) => (
-        <Button
-          type="link"
-          icon={<EditOutlined />}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleEdit(record);
-          }}
+        <Popconfirm
+          title="Delete Order"
+          description="Are you sure? This cannot be undone."
+          onConfirm={(e) => { e?.stopPropagation(); handleDelete(record.id!); }}
+          onCancel={(e) => e?.stopPropagation()}
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
         >
-          Edit
-        </Button>
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Popconfirm>
       ),
     },
   ];
 
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="page-header-bar">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <h1 style={{ margin: 0 }}>Order Management</h1>
           {dashboardFilter && (
             <Tag
@@ -419,12 +424,12 @@ const Orders: React.FC = () => {
             </Tag>
           )}
         </div>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+        <Space wrap>
           <Input
             placeholder="Search by customer name or phone"
             prefix={<SearchOutlined />}
             allowClear
-            style={{ width: 280 }}
+            style={{ width: 240, minWidth: 180 }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -433,12 +438,12 @@ const Orders: React.FC = () => {
             value={dateRange}
             onChange={handleDateRangeChange}
             allowClear
-            style={{ width: 280 }}
+            style={{ minWidth: 200 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             Create Order
           </Button>
-        </div>
+        </Space>
       </div>
 
       <Card>
@@ -451,7 +456,11 @@ const Orders: React.FC = () => {
         ) : (
           <Table
             columns={columns}
-            dataSource={filteredOrders}
+            dataSource={[...filteredOrders].sort((a, b) => {
+              const aDate = a.updatedDate || a.receivedDate;
+              const bDate = b.updatedDate || b.receivedDate;
+              return dayjs(bDate || 0).valueOf() - dayjs(aDate || 0).valueOf();
+            })}
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: false }}
             scroll={{ x: 1800 }}
@@ -480,6 +489,7 @@ const Orders: React.FC = () => {
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{ status: 'fresh', advance: 0, balance: 0 }}
+          onValuesChange={handleOrderFormValuesChange}
         >
           <Form.Item
             name="mobileNo"
@@ -510,8 +520,20 @@ const Orders: React.FC = () => {
             <InputNumber min={1} style={{ width: '100%' }} placeholder="Enter total items" />
           </Form.Item>
 
-          <Form.Item name="deliveryDate" label="Delivery Date">
-            <DatePicker style={{ width: '100%' }} />
+          <Form.Item
+            name="deliveryDate"
+            label="Delivery Date"
+            rules={[{
+              validator: (_, value) => {
+                if (!value || value >= dayjs().startOf('day')) return Promise.resolve();
+                return Promise.reject(new Error('Delivery date must be today or a future date'));
+              },
+            }]}
+          >
+            <DatePicker
+              style={{ width: '100%' }}
+              disabledDate={(current) => current && current < dayjs().startOf('day')}
+            />
           </Form.Item>
 
           <Form.Item
@@ -538,13 +560,13 @@ const Orders: React.FC = () => {
             />
           </Form.Item>
 
-          <Form.Item name="balance" label="Balance Amount">
+          <Form.Item name="balance" label="Balance to be Paid">
             <InputNumber
               min={0}
               step={0.01}
-              style={{ width: '100%' }}
-              placeholder="Enter balance amount"
+              style={{ width: '100%', backgroundColor: '#f5f5f5' }}
               prefix="₹"
+              readOnly
             />
           </Form.Item>
 

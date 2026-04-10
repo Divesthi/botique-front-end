@@ -25,6 +25,10 @@ export const billService = {
     const response = await apiClient.put<Bill>(`/tenants/${tenantCode}/bills`, bill);
     return response.data;
   },
+
+  deleteBill: async (tenantCode: string, billId: number): Promise<void> => {
+    await apiClient.delete(`/tenants/${tenantCode}/bills/${billId}`);
+  },
 };
 
 export default billService;

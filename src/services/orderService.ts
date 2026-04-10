@@ -25,6 +25,10 @@ export const orderService = {
     const response = await apiClient.put<Order>(`/tenants/${tenantCode}/orders`, order);
     return response.data;
   },
+
+  deleteOrder: async (tenantCode: string, orderId: number): Promise<void> => {
+    await apiClient.delete(`/tenants/${tenantCode}/orders/${orderId}`);
+  },
 };
 
 export default orderService;

@@ -24,7 +24,7 @@ const RequireAuth: React.FC = () => {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#FAF7F4' }}>
         <Spin size="large" />
       </div>
     );
@@ -64,8 +64,34 @@ function App() {
     <ConfigProvider
       theme={{
         token: {
-          colorPrimary: '#6366f1',
-          borderRadius: 8,
+          colorPrimary: '#8B3A5A',
+          colorLink: '#8B3A5A',
+          colorLinkHover: '#5C2238',
+          borderRadius: 10,
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          colorBgContainer: '#ffffff',
+          colorBgLayout: '#FAF7F4',
+          colorBorder: '#E8DDD8',
+          colorTextSecondary: '#7A6068',
+        },
+        components: {
+          Layout: {
+            siderBg: '#2D1B25',
+            triggerBg: '#3D2030',
+            headerBg: '#ffffff',
+            bodyBg: '#FAF7F4',
+          },
+          Menu: {
+            darkItemBg: '#2D1B25',
+            darkItemSelectedBg: '#8B3A5A',
+            darkItemHoverBg: '#3D2030',
+            darkSubMenuItemBg: '#231520',
+            darkItemSelectedColor: '#E8D4A8',
+            darkItemColor: 'rgba(232, 212, 168, 0.75)',
+          },
+          Button: {
+            primaryColor: '#ffffff',
+          },
         },
       }}
     >

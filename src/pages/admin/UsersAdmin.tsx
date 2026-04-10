@@ -158,26 +158,19 @@ const UsersAdmin: React.FC = () => {
 
     return (
         <div>
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: 24,
-                }}
-            >
+            <div className="page-header-bar">
                 <div>
                     <h1 style={{ margin: 0 }}>User Management</h1>
                     <p style={{ margin: '4px 0 0', color: '#888', fontSize: 13 }}>
                         Manage platform and tenant users, assign roles, and control access.
                     </p>
                 </div>
-                <Space>
+                <Space wrap>
                     <Input
                         placeholder="Search by email, name or tenant"
                         prefix={<SearchOutlined />}
                         allowClear
-                        style={{ width: 280 }}
+                        style={{ width: 250, minWidth: 180 }}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -213,7 +206,7 @@ const UsersAdmin: React.FC = () => {
                     form.resetFields();
                 }}
                 onOk={() => form.submit()}
-                width={500}
+                width="min(500px, calc(100vw - 32px))"
                 okText="Add User"
             >
                 <Form form={form} layout="vertical" onFinish={handleSubmit}>

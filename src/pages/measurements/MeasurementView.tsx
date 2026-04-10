@@ -134,7 +134,7 @@ const MeasurementView: React.FC = () => {
       </div>
 
       <Card title={`Measurement #${measurement.id}`} style={{ marginBottom: 24 }}>
-        <Descriptions bordered column={2}>
+        <Descriptions bordered column={{ xs: 1, sm: 2 }}>
           <Descriptions.Item label="Measurement ID">{measurement.id}</Descriptions.Item>
           <Descriptions.Item label="Name">{measurement.name}</Descriptions.Item>
           <Descriptions.Item label="Customer">
@@ -161,7 +161,7 @@ const MeasurementView: React.FC = () => {
 
       <Card title="Measurements">
         <div style={{ maxHeight: 400, overflowY: 'auto', paddingRight: 4 }}>
-          <Descriptions bordered column={2}>
+          <Descriptions bordered column={{ xs: 1, sm: 2 }}>
             {Object.entries(measurement.measurement).map(([key, value]) => (
               <Descriptions.Item key={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
                 {value}
@@ -179,7 +179,7 @@ const MeasurementView: React.FC = () => {
           form.resetFields();
         }}
         onOk={() => form.submit()}
-        width={700}
+        width="min(700px, calc(100vw - 32px))"
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
@@ -243,20 +243,20 @@ const MeasurementView: React.FC = () => {
                   }}
                 >
                   {fields.map(({ key, name, ...restField }) => (
-                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline" wrap>
                       <Form.Item
                         {...restField}
                         name={[name, 'key']}
                         rules={[{ required: true, message: 'Missing field name' }]}
                       >
-                        <Input placeholder="Field name (e.g., Shoulder)" style={{ width: 220 }} />
+                        <Input placeholder="Field name (e.g., Shoulder)" style={{ width: 180, minWidth: 140 }} />
                       </Form.Item>
                       <Form.Item
                         {...restField}
                         name={[name, 'value']}
                         rules={[{ required: true, message: 'Missing value' }]}
                       >
-                        <Input placeholder="Value (e.g., 15 inches)" style={{ width: 220 }} />
+                        <Input placeholder="Value (e.g., 15 inches)" style={{ width: 180, minWidth: 140 }} />
                       </Form.Item>
                       <MinusCircleOutlined
                         onClick={() => remove(name)}

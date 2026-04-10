@@ -188,7 +188,7 @@ const CustomerView: React.FC = () => {
       </div>
 
       <Card title="Customer Details" style={{ marginBottom: 24 }}>
-        <Descriptions bordered column={2}>
+        <Descriptions bordered column={{ xs: 1, sm: 2 }}>
           <Descriptions.Item label="ID">{customer.id}</Descriptions.Item>
           <Descriptions.Item label="Name">{customer.name}</Descriptions.Item>
           <Descriptions.Item label="Mobile Number">{customer.mobileNo}</Descriptions.Item>
@@ -213,6 +213,7 @@ const CustomerView: React.FC = () => {
             dataSource={measurements}
             rowKey="id"
             pagination={false}
+            scroll={{ x: 600 }}
           />
         )}
       </Card>
@@ -221,7 +222,7 @@ const CustomerView: React.FC = () => {
         {orders.length === 0 ? (
           <p style={{ textAlign: 'center', color: '#999' }}>No orders found</p>
         ) : (
-          <Table columns={orderColumns} dataSource={orders} rowKey="id" pagination={false} />
+          <Table columns={orderColumns} dataSource={orders} rowKey="id" pagination={false} scroll={{ x: 600 }} />
         )}
       </Card>
 
@@ -233,7 +234,7 @@ const CustomerView: React.FC = () => {
           form.resetFields();
         }}
         onOk={() => form.submit()}
-        width={600}
+        width="min(600px, calc(100vw - 32px))"
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item

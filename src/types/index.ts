@@ -38,6 +38,7 @@ export interface Customer {
   tenantId?: string;
   tenantCode?: string;
   creationDate?: string;
+  updatedDate?: string;
 }
 
 export interface CustomerMeasurement {
@@ -48,6 +49,7 @@ export interface CustomerMeasurement {
   measurement: Record<string, any>; // Flexible JSON object
   remarks?: string;
   creationDate?: string;
+  updatedDate?: string;
 }
 
 export interface OrderItemCost {
@@ -85,6 +87,8 @@ export interface Order {
   balance: number;
   estimateAmount?: string; // JSON string
   orderItems?: OrderItem[];
+  updatedDate?: string;
+  deliveredDate?: string;
 }
 
 export interface Bill {
@@ -98,6 +102,7 @@ export interface Bill {
   discount?: string;
   remarks?: string;
   orders?: Order[];
+  updatedDate?: string;
 }
 
 // API Response types

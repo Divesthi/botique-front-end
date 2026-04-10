@@ -34,6 +34,10 @@ export const measurementService = {
     );
     return response.data;
   },
+
+  deleteMeasurement: async (tenantCode: string, measurementId: number): Promise<void> => {
+    await apiClient.delete(`/tenants/${tenantCode}/customers/measurements/${measurementId}`);
+  },
 };
 
 export default measurementService;

@@ -16,7 +16,8 @@ import {
   Spin,
   Tag,
 } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { Popconfirm } from 'antd';
 import type { Bill, Customer, Order } from '../../types';
 import { billService } from '../../services/billService';
 import { customerService } from '../../services/customerService';
@@ -72,6 +73,17 @@ const Bills: React.FC = () => {
     setDateRange(dates);
   };
 
+  const handleDelete = async (billId: number) => {
+    try {
+      await billService.deleteBill(tenantCode, billId);
+      message.success('Bill deleted successfully');
+      loadData();
+    } catch (error) {
+      message.error('Failed to delete bill');
+      console.error('Failed to delete bill:', error);
+    }
+  };
+
   const handleAdd = () => {
     setEditingBill(null);
     setSelectedCustomer('');
@@ -91,7 +103,18 @@ const Bills: React.FC = () => {
 
   const handleCustomerChange = (mobileNo: string) => {
     setSelectedCustomer(mobileNo);
-    form.setFieldsValue({ orderIds: [] });
+    form.setFieldsValue({ orderIds: [], totalAmount: undefined, advancePaid: 0, balanceAmount: undefined });
+  };
+
+  const handleBillFormValuesChange = (changedValues: any, allValues: any) => {
+    if ('orderIds' in changedValues) {
+      const selectedOrderIds: number[] = allValues.orderIds || [];
+      const selectedOrders = orders.filter((o) => selectedOrderIds.includes(o.id!));
+      const totalAmount = selectedOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+      const advancePaid = selectedOrders.reduce((sum, o) => sum + (o.advance || 0), 0);
+      const balanceAmount = totalAmount - advancePaid;
+      form.setFieldsValue({ totalAmount, advancePaid, balanceAmount });
+    }
   };
 
   const handleSubmit = async (values: any) => {
@@ -118,10 +141,28 @@ const Bills: React.FC = () => {
         await billService.createBill(tenantCode, billData);
         message.success('Bill created successfully');
       }
+
       setModalVisible(false);
       form.resetFields();
       setSelectedCustomer('');
       loadData();
+
+      if (values.status === 'closed' && selectedOrders.length > 0) {
+        try {
+          await Promise.all(
+            selectedOrders
+              .filter((o) => o.status !== 'delivered')
+              .map((o) => orderService.updateOrder(tenantCode, {
+                ...o,
+                status: 'delivered',
+                orderItems: undefined, // Let backend cascade delivered status in-place
+              }))
+          );
+        } catch (orderError) {
+          message.warning('Bill saved, but failed to update some order statuses.');
+          console.error('Failed to update order statuses:', orderError);
+        }
+      }
     } catch (error) {
       message.error('Failed to save bill');
       console.error('Failed to save bill:', error);
@@ -151,7 +192,15 @@ const Bills: React.FC = () => {
     return customer?.name || '-';
   };
 
-  const customerOrders = orders.filter((o) => o.mobileNo === selectedCustomer);
+  const billedOrderIds = new Set(
+    bills
+      .filter((b) => !editingBill || b.id !== editingBill.id)
+      .flatMap((b) => b.orders?.map((o) => o.id) ?? [])
+  );
+
+  const customerOrders = orders.filter(
+    (o) => o.mobileNo === selectedCustomer && !billedOrderIds.has(o.id)
+  );
 
   const getOrderStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -175,12 +224,6 @@ const Bills: React.FC = () => {
 
   const expandedRowRender = (record: Bill) => {
     const orderColumns: ColumnsType<Order> = [
-      {
-        title: 'Order ID',
-        dataIndex: 'id',
-        key: 'id',
-        width: 100,
-      },
       {
         title: 'Received Date',
         dataIndex: 'receivedDate',
@@ -238,22 +281,6 @@ const Bills: React.FC = () => {
 
   const columns: ColumnsType<Bill> = [
     {
-      title: 'Bill ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 100,
-      sorter: (a, b) => a.id! - b.id!,
-      defaultSortOrder: 'descend',
-      render: (id: number) => (
-        <Button type="link" onClick={(e) => {
-          e.stopPropagation();
-          navigate(`/bills/${id}`);
-        }}>
-          #{id}
-        </Button>
-      ),
-    },
-    {
       title: 'Customer',
       dataIndex: 'mobileNo',
       key: 'customerName',
@@ -295,18 +322,6 @@ const Bills: React.FC = () => {
           )}
         </Space>
       ),
-    },
-    {
-      title: 'Created Date',
-      dataIndex: 'createdDate',
-      key: 'createdDate',
-      width: 150,
-      sorter: (a, b) => {
-        if (!a.createdDate) return 1;
-        if (!b.createdDate) return -1;
-        return dayjs(a.createdDate).valueOf() - dayjs(b.createdDate).valueOf();
-      },
-      render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
     },
     {
       title: 'Total Amount',
@@ -354,14 +369,27 @@ const Bills: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 120,
+      width: 80,
       fixed: 'right',
+      onHeaderCell: () => ({ style: { backgroundColor: '#F0E8E2' } }),
+      onCell: () => ({ style: { backgroundColor: '#ffffff' } }),
       render: (_, record) => (
-        <Space>
-          <Button type="link" icon={<EditOutlined />} onClick={() => handleEdit(record)}>
-            Edit
-          </Button>
-        </Space>
+        <Popconfirm
+          title="Delete Bill"
+          description="Are you sure? This cannot be undone."
+          onConfirm={(e) => { e?.stopPropagation(); handleDelete(record.id!); }}
+          onCancel={(e) => e?.stopPropagation()}
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
+        >
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Popconfirm>
       ),
     },
   ];
@@ -369,20 +397,15 @@ const Bills: React.FC = () => {
   return (
     <div>
       <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}
+        className="page-header-bar"
       >
         <h1>Bill Management</h1>
-        <Space>
+        <Space wrap>
           <Input
             placeholder="Search by customer name or phone"
             prefix={<SearchOutlined />}
             allowClear
-            style={{ width: 280 }}
+            style={{ width: 240, minWidth: 180 }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -391,7 +414,7 @@ const Bills: React.FC = () => {
             value={dateRange}
             onChange={handleDateRangeChange}
             allowClear
-            style={{ width: 280 }}
+            style={{ minWidth: 200 }}
           />
           <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
             Create Bill
@@ -409,7 +432,11 @@ const Bills: React.FC = () => {
         ) : (
           <Table
             columns={columns}
-            dataSource={bills}
+            dataSource={[...bills].sort((a, b) => {
+              const aDate = a.updatedDate || a.createdDate;
+              const bDate = b.updatedDate || b.createdDate;
+              return dayjs(bDate || 0).valueOf() - dayjs(aDate || 0).valueOf();
+            })}
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: false }}
             scroll={{ x: 1600 }}
@@ -440,6 +467,7 @@ const Bills: React.FC = () => {
           layout="vertical"
           onFinish={handleSubmit}
           initialValues={{ status: 'fresh', advancePaid: 0, balanceAmount: 0 }}
+          onValuesChange={handleBillFormValuesChange}
         >
           <Form.Item
             name="mobileNo"
@@ -490,7 +518,7 @@ const Bills: React.FC = () => {
               min={0}
               step={0.01}
               style={{ width: '100%' }}
-              placeholder="Enter total amount"
+              placeholder="Auto-populated from orders"
               prefix="₹"
             />
           </Form.Item>
@@ -500,7 +528,7 @@ const Bills: React.FC = () => {
               min={0}
               step={0.01}
               style={{ width: '100%' }}
-              placeholder="Enter advance paid"
+              placeholder="Auto-populated from orders"
               prefix="₹"
             />
           </Form.Item>
@@ -510,7 +538,7 @@ const Bills: React.FC = () => {
               min={0}
               step={0.01}
               style={{ width: '100%' }}
-              placeholder="Enter balance amount"
+              placeholder="Auto-populated from orders"
               prefix="₹"
             />
           </Form.Item>

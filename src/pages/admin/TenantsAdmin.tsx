@@ -102,14 +102,6 @@ const TenantsAdmin: React.FC = () => {
 
   const columns: ColumnsType<Tenant> = [
     {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 70,
-      sorter: (a, b) => (a.id ?? 0) - (b.id ?? 0),
-      defaultSortOrder: 'descend',
-    },
-    {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
@@ -151,6 +143,7 @@ const TenantsAdmin: React.FC = () => {
         if (!b.startedDate) return -1;
         return dayjs(a.startedDate).valueOf() - dayjs(b.startedDate).valueOf();
       },
+      defaultSortOrder: 'descend',
       render: (date?: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
     },
     {
@@ -182,6 +175,8 @@ const TenantsAdmin: React.FC = () => {
       key: 'actions',
       width: 100,
       fixed: 'right',
+      onHeaderCell: () => ({ style: { backgroundColor: '#F0E8E2' } }),
+      onCell: () => ({ style: { backgroundColor: '#ffffff' } }),
       render: (_, record) => (
         <Button
           type="link"
@@ -196,26 +191,19 @@ const TenantsAdmin: React.FC = () => {
 
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}
-      >
+      <div className="page-header-bar">
         <div>
           <h1 style={{ margin: 0 }}>Tenant Management</h1>
           <p style={{ margin: '4px 0 0', color: '#888', fontSize: 13 }}>
             Create and manage boutique tenants on the BQOM platform.
           </p>
         </div>
-        <Space>
+        <Space wrap>
           <Input
             placeholder="Search by name, code or phone"
             prefix={<SearchOutlined />}
             allowClear
-            style={{ width: 280 }}
+            style={{ width: 250, minWidth: 180 }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -252,7 +240,7 @@ const TenantsAdmin: React.FC = () => {
           setEditingTenant(null);
         }}
         onOk={() => form.submit()}
-        width={600}
+        width="min(600px, calc(100vw - 32px))"
         okText={editingTenant ? 'Update' : 'Create'}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>

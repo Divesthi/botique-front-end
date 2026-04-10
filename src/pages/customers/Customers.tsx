@@ -12,7 +12,8 @@ import {
   Empty,
   Spin,
 } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
+import { Popconfirm } from 'antd';
 import type { Customer } from '../../types';
 import { customerService } from '../../services/customerService';
 import { useAuth } from '../../context/AuthContext';
@@ -59,6 +60,17 @@ const Customers: React.FC = () => {
     setModalVisible(true);
   };
 
+  const handleDelete = async (customerId: number) => {
+    try {
+      await customerService.deleteCustomer(tenantCode, customerId);
+      message.success('Customer deleted successfully');
+      loadCustomers();
+    } catch (error) {
+      message.error('Failed to delete customer. They may have linked orders or measurements.');
+      console.error('Failed to delete customer:', error);
+    }
+  };
+
   const handleSubmit = async (values: any) => {
     try {
       if (editingCustomer) {
@@ -78,19 +90,6 @@ const Customers: React.FC = () => {
   };
 
   const columns: ColumnsType<Customer> = [
-    {
-      title: 'ID',
-      dataIndex: 'id',
-      key: 'id',
-      width: 80,
-      sorter: (a, b) => a.id! - b.id!,
-      defaultSortOrder: 'descend',
-      render: (id: number, record: Customer) => (
-        <Button type="link" onClick={() => navigate(`/customers/${record.mobileNo}`)}>
-          #{id}
-        </Button>
-      ),
-    },
     {
       title: 'Name',
       dataIndex: 'name',
@@ -117,48 +116,43 @@ const Customers: React.FC = () => {
       width: 150,
     },
     {
-      title: 'Created Date',
-      dataIndex: 'creationDate',
-      key: 'creationDate',
-      width: 150,
-      render: (date: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
-    },
-    {
       title: 'Actions',
       key: 'actions',
-      width: 120,
+      width: 80,
       fixed: 'right',
+      onHeaderCell: () => ({ style: { backgroundColor: '#F0E8E2' } }),
+      onCell: () => ({ style: { backgroundColor: '#ffffff' } }),
       render: (_, record) => (
-        <Space>
+        <Popconfirm
+          title="Delete Customer"
+          description="Are you sure? This cannot be undone."
+          onConfirm={(e) => { e?.stopPropagation(); handleDelete(record.id!); }}
+          onCancel={(e) => e?.stopPropagation()}
+          okText="Delete"
+          okButtonProps={{ danger: true }}
+          cancelText="Cancel"
+        >
           <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          >
-            Edit
-          </Button>
-        </Space>
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={(e) => e.stopPropagation()}
+          />
+        </Popconfirm>
       ),
     },
   ];
 
   return (
     <div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 24,
-        }}
-      >
+      <div className="page-header-bar">
         <h1>Customer Management</h1>
-        <Space>
+        <Space wrap>
           <Input
             placeholder="Search by name or phone"
             prefix={<SearchOutlined />}
             allowClear
-            style={{ width: 250 }}
+            style={{ width: 250, minWidth: 180 }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -178,7 +172,11 @@ const Customers: React.FC = () => {
         ) : (
           <Table
             columns={columns}
-            dataSource={customers}
+            dataSource={[...customers].sort((a, b) => {
+              const aDate = a.updatedDate || a.creationDate;
+              const bDate = b.updatedDate || b.creationDate;
+              return dayjs(bDate || 0).valueOf() - dayjs(aDate || 0).valueOf();
+            })}
             rowKey="id"
             pagination={{ pageSize: 10, showSizeChanger: false }}
             scroll={{ x: 1000 }}

@@ -1,91 +1,470 @@
-/* BQOM - Boutique Order Management System */
+/* ============================================================
+   BQOM — Boutique Order Management System
+   Theme: Rose Wine × Gold × Cream
+   ============================================================ */
 
-* {
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* ── Design Tokens ────────────────────────────────────────── */
+:root {
+  --bq-primary:        #8B3A5A;
+  --bq-primary-dark:   #5C2238;
+  --bq-primary-light:  #C8748A;
+  --bq-gold:           #C9A96E;
+  --bq-gold-light:     #E8D4A8;
+  --bq-gold-pale:      #F5EDD8;
+  --bq-cream:          #FAF7F4;
+  --bq-cream-dark:     #F0E8E2;
+  --bq-sidebar:        #2D1B25;
+  --bq-sidebar-hover:  #3D2030;
+  --bq-text:           #2D1B25;
+  --bq-text-muted:     #7A6068;
+  --bq-border:         #E8DDD8;
+}
+
+/* ── Reset ────────────────────────────────────────────────── */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ── Base ─────────────────────────────────────────────────── */
 body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f0f2f5;
+  background-color: var(--bq-cream);
+  color: var(--bq-text);
 }
 
 #root {
   min-height: 100vh;
 }
 
-h1 {
-  font-size: 24px;
-  font-weight: 600;
-  color: #262626;
+/* ── Headings — Playfair Display ──────────────────────────── */
+h1, h2, h3 {
+  font-family: 'Playfair Display', Georgia, serif;
+  color: var(--bq-text);
   margin: 0;
+  line-height: 1.25;
 }
 
-h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #262626;
-}
+h1 { font-size: 28px; font-weight: 700; }
+h2 { font-size: 22px; font-weight: 600; }
+h3 { font-size: 18px; font-weight: 600; }
 
-h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #262626;
-}
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bq-cream-dark); }
 ::-webkit-scrollbar-thumb {
-  background: #888;
+  background: var(--bq-primary-light);
   border-radius: 4px;
 }
+::-webkit-scrollbar-thumb:hover { background: var(--bq-primary); }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
+/* ============================================================
+   Ant Design Component Overrides
+   ============================================================ */
 
-/* Ant Design customizations */
+/* Layout shell */
 .ant-layout {
-  background: #f0f2f5;
+  background: var(--bq-cream) !important;
 }
 
+.ant-layout-content {
+  background: transparent !important;
+}
+
+/* ── Sidebar ──────────────────────────────────────────────── */
 .ant-layout-sider {
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
+  background: var(--bq-sidebar) !important;
+  box-shadow: 3px 0 20px rgba(45, 27, 37, 0.18) !important;
 }
 
+.ant-layout-sider-trigger {
+  background: var(--bq-sidebar-hover) !important;
+  color: var(--bq-gold-light) !important;
+  border-top: 1px solid rgba(201, 169, 110, 0.15) !important;
+}
+
+.ant-menu-dark,
+.ant-menu-dark .ant-menu-sub {
+  background: var(--bq-sidebar) !important;
+}
+
+.ant-menu-dark .ant-menu-item:hover,
+.ant-menu-dark .ant-menu-item-active {
+  background-color: var(--bq-sidebar-hover) !important;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  background-color: var(--bq-primary) !important;
+}
+
+.ant-menu-dark .ant-menu-item {
+  margin: 2px 8px !important;
+  border-radius: 8px !important;
+  width: calc(100% - 16px) !important;
+  transition: background 0.2s ease !important;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.ant-layout-header {
+  background: #ffffff !important;
+  border-bottom: 1px solid var(--bq-border) !important;
+  box-shadow: 0 1px 8px rgba(45, 27, 37, 0.06) !important;
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+.ant-card {
+  border-radius: 14px !important;
+  border: 1px solid var(--bq-border) !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(139, 58, 90, 0.05), 0 1px 3px rgba(0,0,0,0.04) !important;
+  transition: box-shadow 0.25s ease, transform 0.25s ease !important;
+}
+
+.ant-card:hover {
+  box-shadow: 0 8px 28px rgba(139, 58, 90, 0.13), 0 2px 8px rgba(0,0,0,0.06) !important;
+  transform: translateY(-2px);
+}
+
+.ant-card .ant-card-head {
+  border-bottom: 1px solid var(--bq-cream-dark) !important;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--bq-text) !important;
+}
+
+/* ── Statistics cards ─────────────────────────────────────── */
+.ant-statistic-title {
+  color: var(--bq-text-muted) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.3px !important;
+}
+
+.ant-statistic-content-value {
+  font-family: 'Playfair Display', Georgia, serif !important;
+}
+
+/* ── Tables ───────────────────────────────────────────────── */
 .ant-table {
   font-size: 14px;
+  background: transparent !important;
 }
 
-.ant-card {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px rgba(0, 0, 0, 0.02);
+.ant-table-thead > tr > th {
+  background: var(--bq-cream-dark) !important;
+  color: var(--bq-text) !important;
+  font-weight: 600 !important;
+  font-size: 12.5px !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  border-bottom: 2px solid var(--bq-border) !important;
 }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  h1 {
-    font-size: 20px;
+.ant-table-tbody > tr:hover > td {
+  background: rgba(139, 58, 90, 0.04) !important;
+}
+
+/* Fixed (sticky) columns: opaque background on hover
+   Base state is handled via onCell inline style in each column definition */
+.ant-table-tbody > tr:hover > td.ant-table-cell-fix-right,
+.ant-table-tbody > tr:hover > td.ant-table-cell-fix-left {
+  background-color: #fbf7f8 !important;
+}
+
+.ant-table-tbody > tr.ant-table-row-selected > td {
+  background: var(--bq-gold-pale) !important;
+}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.ant-btn-primary {
+  background: var(--bq-primary) !important;
+  border-color: var(--bq-primary) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.3px !important;
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background: var(--bq-primary-dark) !important;
+  border-color: var(--bq-primary-dark) !important;
+}
+
+/* ── Tags ─────────────────────────────────────────────────── */
+.ant-tag {
+  border-radius: 20px !important;
+  font-weight: 500 !important;
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+
+/* ── Form Labels ──────────────────────────────────────────── */
+.ant-form-item-label > label {
+  font-weight: 500 !important;
+  color: var(--bq-text) !important;
+  font-size: 13.5px !important;
+}
+
+/* ── Input fields ─────────────────────────────────────────── */
+.ant-input:focus,
+.ant-input-affix-wrapper:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--bq-primary) !important;
+  box-shadow: 0 0 0 3px rgba(139, 58, 90, 0.1) !important;
+}
+
+.ant-input-password:focus-within {
+  border-color: var(--bq-primary) !important;
+  box-shadow: 0 0 0 3px rgba(139, 58, 90, 0.1) !important;
+}
+
+/* ── Select ───────────────────────────────────────────────── */
+.ant-select-focused .ant-select-selector {
+  border-color: var(--bq-primary) !important;
+  box-shadow: 0 0 0 3px rgba(139, 58, 90, 0.1) !important;
+}
+
+/* ── Modal ────────────────────────────────────────────────── */
+.ant-modal-content {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+.ant-modal-header {
+  border-bottom: 1px solid var(--bq-cream-dark) !important;
+  padding: 20px 24px 16px !important;
+}
+
+.ant-modal-title {
+  font-family: 'Playfair Display', Georgia, serif !important;
+  font-size: 18px !important;
+  color: var(--bq-text) !important;
+}
+
+/* ── Badges ───────────────────────────────────────────────── */
+.ant-badge-count {
+  background: var(--bq-primary) !important;
+}
+
+/* ── Pagination ───────────────────────────────────────────── */
+.ant-pagination-item-active {
+  border-color: var(--bq-primary) !important;
+}
+
+.ant-pagination-item-active a {
+  color: var(--bq-primary) !important;
+}
+
+/* ── Breadcrumb ───────────────────────────────────────────── */
+.ant-breadcrumb-link {
+  color: var(--bq-text-muted) !important;
+}
+
+/* ============================================================
+   Boutique Utility Classes
+   ============================================================ */
+
+/* Running stitch divider */
+.bq-stitch {
+  border: none;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    var(--bq-gold) 0px,
+    var(--bq-gold) 8px,
+    transparent 8px,
+    transparent 16px
+  );
+  opacity: 0.6;
+  margin: 16px 0;
+}
+
+/* Gold accent left border on cards */
+.bq-accent-card {
+  border-left: 3px solid var(--bq-gold) !important;
+}
+
+/* Dot grid pattern (thread-pin-board feel) */
+.bq-dot-bg {
+  background-image: radial-gradient(
+    circle, rgba(201, 169, 110, 0.18) 1px, transparent 1px
+  );
+  background-size: 22px 22px;
+}
+
+/* ============================================================
+   Page Header Bar — responsive toolbar layout
+   ============================================================ */
+
+.page-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+/* ============================================================
+   Responsive Breakpoints
+   ============================================================ */
+
+/* Tablet (768px – 991px) */
+@media (max-width: 991px) {
+  h1 { font-size: 22px; }
+  h2 { font-size: 18px; }
+  h3 { font-size: 16px; }
+
+  /* Reduce content padding */
+  .ant-card .ant-card-body {
+    padding: 16px !important;
   }
 
-  h2 {
-    font-size: 18px;
+  /* Tighter stat cards */
+  .ant-statistic-content-value {
+    font-size: 22px !important;
+  }
+}
+
+/* Mobile (< 768px) */
+@media (max-width: 767px) {
+  h1 { font-size: 20px; }
+  h2 { font-size: 16px; }
+  h3 { font-size: 15px; }
+
+  /* Modals should not overflow screen */
+  .ant-modal {
+    max-width: calc(100vw - 24px) !important;
+    margin: 12px auto !important;
   }
 
-  h3 {
-    font-size: 16px;
+  .ant-modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Full-width toolbar inputs on mobile */
+  .page-header-bar .ant-space {
+    width: 100%;
+  }
+
+  .page-header-bar .ant-space-item {
+    flex: 1;
+  }
+
+  .page-header-bar .ant-input-affix-wrapper,
+  .page-header-bar .ant-picker-range {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+
+  /* Tables — reduce font on mobile */
+  .ant-table {
+    font-size: 13px !important;
+  }
+
+  .ant-table-thead > tr > th {
+    font-size: 11px !important;
+    padding: 8px 12px !important;
+  }
+
+  .ant-table-tbody > tr > td {
+    padding: 8px 12px !important;
+  }
+
+  /* Cards */
+  .ant-card {
+    border-radius: 10px !important;
+  }
+
+  /* Content area padding */
+  .ant-layout-content {
+    overflow-x: hidden;
+  }
+}
+
+/* ── Tablet: modals fit within viewport ────────────────────── */
+@media (max-width: 1023px) {
+  .ant-modal {
+    max-width: calc(100vw - 48px) !important;
+  }
+}
+
+/* ── Login page: hide brand panel on mobile ─────────────────── */
+@media (max-width: 767px) {
+  .login-brand { display: none !important; }
+}
+
+/* ── Admin layout header: compact on mobile ─────────────────── */
+@media (max-width: 767px) {
+  .admin-nav-text,
+  .admin-user-text { display: none !important; }
+}
+
+/* ── Detail page header: flex + gap ─────────────────────────── */
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* ── Form rows inside modals: wrap on tablet/mobile ─────────── */
+@media (max-width: 991px) {
+  .ant-modal-body .ant-space-horizontal {
+    flex-wrap: wrap !important;
+  }
+  .ant-modal-body .ant-space-horizontal > .ant-space-item {
+    flex: 1 1 auto;
+    min-width: 140px;
+  }
+  .ant-modal-body .ant-space-horizontal .ant-input-number,
+  .ant-modal-body .ant-space-horizontal .ant-picker,
+  .ant-modal-body .ant-space-horizontal .ant-select {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+}
+
+/* ── Cost-breakdown row: wrap on mobile ─────────────────────── */
+@media (max-width: 575px) {
+  .cost-row {
+    flex-wrap: wrap !important;
+  }
+  .cost-row > .ant-space-item {
+    flex: 1 1 auto;
+    min-width: 120px;
+  }
+  .cost-row .ant-input,
+  .cost-row .ant-input-number {
+    width: 100% !important;
+  }
+}
+
+/* ── Measurement fields: wrap on small screens ──────────────── */
+@media (max-width: 767px) {
+  .measurement-field-row {
+    flex-wrap: wrap !important;
+  }
+  .measurement-field-row > .ant-space-item {
+    flex: 1 1 auto;
+    min-width: 130px;
+  }
+  .measurement-field-row .ant-input {
+    width: 100% !important;
+  }
+}
+
+/* ── Revenue page ────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  .ant-table-wrapper {
+    overflow-x: auto;
   }
 }

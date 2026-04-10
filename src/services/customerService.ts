@@ -23,6 +23,10 @@ export const customerService = {
     const response = await apiClient.put<Customer>(`/tenants/${tenantCode}/customers`, customer);
     return response.data;
   },
+
+  deleteCustomer: async (tenantCode: string, customerId: number): Promise<void> => {
+    await apiClient.delete(`/tenants/${tenantCode}/customers/${customerId}`);
+  },
 };
 
 export default customerService;

@@ -151,7 +151,7 @@ const BillView: React.FC = () => {
       </div>
 
       <Card title={`Bill #${bill.id}`} style={{ marginBottom: 24 }}>
-        <Descriptions bordered column={2}>
+        <Descriptions bordered column={{ xs: 1, sm: 2 }}>
           <Descriptions.Item label="Bill ID">{bill.id}</Descriptions.Item>
           <Descriptions.Item label="Status">
             <Tag color={getStatusColor(bill.status)}>{getStatusLabel(bill.status)}</Tag>
@@ -190,7 +190,7 @@ const BillView: React.FC = () => {
 
       {bill.orders && bill.orders.length > 0 && (
         <Card title={`Associated Orders (${bill.orders.length})`}>
-          <Table columns={orderColumns} dataSource={bill.orders} rowKey="id" pagination={false} />
+          <Table columns={orderColumns} dataSource={bill.orders} rowKey="id" pagination={false} scroll={{ x: 600 }} />
         </Card>
       )}
     </div>
