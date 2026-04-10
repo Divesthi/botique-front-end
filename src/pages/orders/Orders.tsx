@@ -160,31 +160,6 @@ const Orders: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleEdit = (order: Order) => {
-    setEditingOrder(order);
-    setSelectedCustomer(order.mobileNo);
-
-    // Prepare order items with cost breakdown for editing
-    const orderItems = order.orderItems?.map((item) => ({
-      measurementId: item.measurementId,
-      quantity: item.quantity,
-      costPerQuantity: item.costPerQuantity,
-      remarks: item.remarks,
-      status: item.status,
-      itemsCost: item.itemsCost?.map((cost) => ({
-        type: cost.type,
-        cost: cost.cost,
-      })) || [],
-    })) || [];
-
-    form.setFieldsValue({
-      ...order,
-      deliveryDate: order.deliveryDate ? dayjs(order.deliveryDate) : undefined,
-      orderItems,
-    });
-    setModalVisible(true);
-  };
-
   const handleCustomerChange = (mobileNo: string) => {
     setSelectedCustomer(mobileNo);
   };

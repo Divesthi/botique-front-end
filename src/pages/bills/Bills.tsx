@@ -91,16 +91,6 @@ const Bills: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleEdit = (bill: Bill) => {
-    setEditingBill(bill);
-    setSelectedCustomer(bill.mobileNo);
-    form.setFieldsValue({
-      ...bill,
-      orderIds: bill.orders?.map((o) => o.id),
-    });
-    setModalVisible(true);
-  };
-
   const handleCustomerChange = (mobileNo: string) => {
     setSelectedCustomer(mobileNo);
     form.setFieldsValue({ orderIds: [], totalAmount: undefined, advancePaid: 0, balanceAmount: undefined });

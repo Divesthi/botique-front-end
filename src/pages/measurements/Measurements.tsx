@@ -62,21 +62,6 @@ const Measurements: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleEdit = (measurement: CustomerMeasurement) => {
-    setEditingMeasurement(measurement);
-
-    // Convert measurement object to array format for form
-    const measurementFields = Object.entries(measurement.measurement || {}).map(
-      ([key, value]) => ({ key, value })
-    );
-
-    form.setFieldsValue({
-      ...measurement,
-      measurementFields,
-    });
-    setModalVisible(true);
-  };
-
   const handleDelete = async (measurementId: number) => {
     try {
       await measurementService.deleteMeasurement(tenantCode, measurementId);

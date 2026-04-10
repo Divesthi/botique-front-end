@@ -54,12 +54,6 @@ const Customers: React.FC = () => {
     setModalVisible(true);
   };
 
-  const handleEdit = (customer: Customer) => {
-    setEditingCustomer(customer);
-    form.setFieldsValue(customer);
-    setModalVisible(true);
-  };
-
   const handleDelete = async (customerId: number) => {
     try {
       await customerService.deleteCustomer(tenantCode, customerId);
