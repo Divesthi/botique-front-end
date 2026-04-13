@@ -23,6 +23,28 @@ import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
+const MEASUREMENT_FIELD_ORDER = [
+  'Height', 'Shoulder', 'Arm', 'Upper Chest', 'Chest', 'Waist', 'Seat',
+  'Side Open', 'Dot Point', 'High Bust Point', 'Front Neck', 'Back Neck',
+  'Sleeve Length', 'Sleeve Loose', 'Pant Model', 'Knee Loose', 'Thigh Loose',
+  'Pant Height', 'Hip', 'Ankle Loose',
+];
+
+const sortedMeasurementEntries = (measurement: Record<string, any>): [string, any][] => {
+  const entries = Object.entries(measurement);
+  const seen = new Set<string>();
+  const ordered: [string, any][] = [];
+  for (const key of MEASUREMENT_FIELD_ORDER) {
+    if (!seen.has(key)) {
+      const entry = entries.find(([k]) => k === key);
+      if (entry) ordered.push(entry);
+      seen.add(key);
+    }
+  }
+  entries.forEach((entry) => { if (!seen.has(entry[0])) { ordered.push(entry); seen.add(entry[0]); } });
+  return ordered;
+};
+
 const Measurements: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -56,9 +78,14 @@ const Measurements: React.FC = () => {
     }
   };
 
+  const DEFAULT_MEASUREMENT_FIELDS = MEASUREMENT_FIELD_ORDER;
+
   const handleAdd = () => {
     setEditingMeasurement(null);
     form.resetFields();
+    form.setFieldsValue({
+      measurementFields: DEFAULT_MEASUREMENT_FIELDS.map((name) => ({ key: name, value: '' })),
+    });
     setModalVisible(true);
   };
 
@@ -78,9 +105,11 @@ const Measurements: React.FC = () => {
       // Convert measurement fields array to object
       const measurement: Record<string, any> = {};
       if (values.measurementFields) {
-        values.measurementFields.forEach((field: { key: string; value: any }) => {
-          measurement[field.key] = field.value;
-        });
+        values.measurementFields
+          .filter((field: { key: string; value: any }) => field.value !== undefined && field.value !== null && String(field.value).trim() !== '')
+          .forEach((field: { key: string; value: any }) => {
+            measurement[field.key] = field.value;
+          });
       }
 
       const data = {
@@ -146,7 +175,7 @@ const Measurements: React.FC = () => {
       key: 'measurement',
       render: (measurement: Record<string, any>) => {
         if (!measurement || Object.keys(measurement).length === 0) return '-';
-        const entries = Object.entries(measurement);
+        const entries = sortedMeasurementEntries(measurement);
         const visible = entries.slice(0, 5);
         return (
           <div>
@@ -287,18 +316,7 @@ const Measurements: React.FC = () => {
             label="Dress Type"
             rules={[{ required: true, message: 'Please enter dress type' }]}
           >
-            <Select
-              placeholder="Select dress type"
-              options={[
-                { value: 'Blouse', label: 'Blouse' },
-                { value: 'Saree', label: 'Saree' },
-                { value: 'Churidar', label: 'Churidar' },
-                { value: 'Lehenga', label: 'Lehenga' },
-                { value: 'Dress', label: 'Dress' },
-                { value: 'Skirt', label: 'Skirt' },
-                { value: 'Other', label: 'Other' },
-              ]}
-            />
+            <Input placeholder="e.g., Blouse" />
           </Form.Item>
 
           <Divider>Measurements</Divider>
@@ -326,7 +344,6 @@ const Measurements: React.FC = () => {
                       <Form.Item
                         {...restField}
                         name={[name, 'value']}
-                        rules={[{ required: true, message: 'Missing value' }]}
                       >
                         <Input placeholder="Value (e.g., 15 inches)" style={{ width: 220 }} />
                       </Form.Item>

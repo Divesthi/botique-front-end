@@ -1,12 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Descriptions, Button, Space, Spin, message, Modal, Form, Input, Select, Divider } from 'antd';
+import { Card, Descriptions, Button, Space, Spin, message, Modal, Form, Input, Select, Divider } from 'antd'; // Select kept for customer dropdown
 import { ArrowLeftOutlined, EditOutlined, PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { CustomerMeasurement, Customer } from '../../types';
 import { measurementService } from '../../services/measurementService';
 import { customerService } from '../../services/customerService';
 import { useAuth } from '../../context/AuthContext';
 import dayjs from 'dayjs';
+
+const MEASUREMENT_FIELD_ORDER = [
+  'Height', 'Shoulder', 'Arm', 'Upper Chest', 'Chest', 'Waist', 'Seat',
+  'Side Open', 'Dot Point', 'High Bust Point', 'Front Neck', 'Back Neck',
+  'Sleeve Length', 'Sleeve Loose', 'Pant Model', 'Knee Loose', 'Thigh Loose',
+  'Pant Height', 'Hip', 'Ankle Loose',
+];
+
+const sortedMeasurementEntries = (measurement: Record<string, any>): [string, any][] => {
+  const entries = Object.entries(measurement);
+  const seen = new Set<string>();
+  const ordered: [string, any][] = [];
+  for (const key of MEASUREMENT_FIELD_ORDER) {
+    if (!seen.has(key)) {
+      const entry = entries.find(([k]) => k === key);
+      if (entry) ordered.push(entry);
+      seen.add(key);
+    }
+  }
+  entries.forEach((entry) => { if (!seen.has(entry[0])) { ordered.push(entry); seen.add(entry[0]); } });
+  return ordered;
+};
 
 const MeasurementView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -52,11 +74,24 @@ const MeasurementView: React.FC = () => {
 
   const handleEdit = () => {
     if (measurement) {
-      // Convert measurement object to measurementFields array for the form
-      const measurementFields = Object.entries(measurement.measurement).map(([key, value]) => ({
-        key,
-        value,
-      }));
+      const saved = measurement.measurement as Record<string, any>;
+      const seen = new Set<string>();
+      const measurementFields: { key: string; value: any }[] = [];
+
+      // Add all default fields in order, with saved values where present
+      for (const key of MEASUREMENT_FIELD_ORDER) {
+        if (!seen.has(key)) {
+          measurementFields.push({ key, value: saved[key] ?? '' });
+          seen.add(key);
+        }
+      }
+      // Append any extra custom fields not in the default order
+      Object.entries(saved).forEach(([key, value]) => {
+        if (!seen.has(key)) {
+          measurementFields.push({ key, value });
+          seen.add(key);
+        }
+      });
 
       form.setFieldsValue({
         mobileNo: measurement.mobileNo,
@@ -76,9 +111,11 @@ const MeasurementView: React.FC = () => {
       // Convert measurementFields array back to measurement object
       const measurementObj: Record<string, any> = {};
       if (values.measurementFields) {
-        values.measurementFields.forEach((field: { key: string; value: any }) => {
-          measurementObj[field.key] = field.value;
-        });
+        values.measurementFields
+          .filter((field: { key: string; value: any }) => field.value !== undefined && field.value !== null && String(field.value).trim() !== '')
+          .forEach((field: { key: string; value: any }) => {
+            measurementObj[field.key] = field.value;
+          });
       }
 
       const updatedMeasurement = {
@@ -161,13 +198,39 @@ const MeasurementView: React.FC = () => {
 
       <Card title="Measurements">
         <div style={{ maxHeight: 400, overflowY: 'auto', paddingRight: 4 }}>
-          <Descriptions bordered column={{ xs: 1, sm: 2 }}>
-            {Object.entries(measurement.measurement).map(([key, value]) => (
-              <Descriptions.Item key={key} label={key.charAt(0).toUpperCase() + key.slice(1)}>
-                {value}
-              </Descriptions.Item>
-            ))}
-          </Descriptions>
+          {(() => {
+            const pantSectionKeys = new Set(
+              MEASUREMENT_FIELD_ORDER.slice(MEASUREMENT_FIELD_ORDER.indexOf('Pant Model'))
+            );
+            const entries = sortedMeasurementEntries(measurement.measurement);
+            const before = entries.filter(([key]) => !pantSectionKeys.has(key));
+            const after = entries.filter(([key]) => pantSectionKeys.has(key));
+            return (
+              <>
+                {before.length > 0 && (
+                  <Descriptions bordered column={{ xs: 1, sm: 2 }}>
+                    {before.map(([key, value]) => (
+                      <Descriptions.Item key={key} label={key}>
+                        {value}
+                      </Descriptions.Item>
+                    ))}
+                  </Descriptions>
+                )}
+                {after.length > 0 && (
+                  <>
+                    <Divider style={{ margin: '16px 0' }} />
+                    <Descriptions bordered column={{ xs: 1, sm: 2 }}>
+                      {after.map(([key, value]) => (
+                        <Descriptions.Item key={key} label={key}>
+                          {value}
+                        </Descriptions.Item>
+                      ))}
+                    </Descriptions>
+                  </>
+                )}
+              </>
+            );
+          })()}
         </div>
       </Card>
 
@@ -215,18 +278,7 @@ const MeasurementView: React.FC = () => {
             label="Dress Type"
             rules={[{ required: true, message: 'Please enter dress type' }]}
           >
-            <Select
-              placeholder="Select dress type"
-              options={[
-                { value: 'Blouse', label: 'Blouse' },
-                { value: 'Saree', label: 'Saree' },
-                { value: 'Churidar', label: 'Churidar' },
-                { value: 'Lehenga', label: 'Lehenga' },
-                { value: 'Dress', label: 'Dress' },
-                { value: 'Skirt', label: 'Skirt' },
-                { value: 'Other', label: 'Other' },
-              ]}
-            />
+            <Input placeholder="e.g., Blouse" />
           </Form.Item>
 
           <Divider>Measurements</Divider>
@@ -242,8 +294,12 @@ const MeasurementView: React.FC = () => {
                     marginBottom: fields.length > 0 ? 8 : 0,
                   }}
                 >
-                  {fields.map(({ key, name, ...restField }) => (
-                    <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline" wrap>
+                  {fields.map(({ key, name, ...restField }) => {
+                    const fieldKey = form.getFieldValue(['measurementFields', name, 'key']);
+                    return (
+                    <React.Fragment key={key}>
+                      {fieldKey === 'Pant Model' && <Divider style={{ margin: '12px 0 8px' }} />}
+                      <Space style={{ display: 'flex', marginBottom: 8 }} align="baseline" wrap>
                       <Form.Item
                         {...restField}
                         name={[name, 'key']}
@@ -254,7 +310,6 @@ const MeasurementView: React.FC = () => {
                       <Form.Item
                         {...restField}
                         name={[name, 'value']}
-                        rules={[{ required: true, message: 'Missing value' }]}
                       >
                         <Input placeholder="Value (e.g., 15 inches)" style={{ width: 180, minWidth: 140 }} />
                       </Form.Item>
@@ -262,8 +317,10 @@ const MeasurementView: React.FC = () => {
                         onClick={() => remove(name)}
                         style={{ color: '#ff4d4f', fontSize: 16 }}
                       />
-                    </Space>
-                  ))}
+                      </Space>
+                    </React.Fragment>
+                    );
+                  })}
                 </div>
                 <Form.Item style={{ marginBottom: 0 }}>
                   <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
