@@ -17,6 +17,7 @@ import OrderView from './pages/orders/OrderView';
 import Bills from './pages/bills/Bills';
 import BillView from './pages/bills/BillView';
 import Revenue from './pages/revenue/Revenue';
+import TenantSettings from './pages/admin/TenantSettings';
 
 // Guard: redirect to /login if no valid session/profile
 const RequireAuth: React.FC = () => {
@@ -109,6 +110,7 @@ function App() {
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<Navigate to="/admin/users" replace />} />
                   <Route path="tenants" element={<TenantsAdmin />} />
+                  <Route path="tenants/:code/settings" element={<TenantSettings />} />
                   <Route path="users" element={<UsersAdmin />} />
                 </Route>
               </Route>

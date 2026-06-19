@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   Table,
@@ -13,14 +14,16 @@ import {
   Tag,
   Empty,
   Spin,
+  Tooltip,
 } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
 import type { Tenant, TenantFormData } from '../../types';
 import { tenantService } from '../../services/tenantService';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const TenantsAdmin: React.FC = () => {
+  const navigate = useNavigate();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -180,16 +183,26 @@ const TenantsAdmin: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 100,
+      width: 120,
       fixed: 'right',
       render: (_, record) => (
-        <Button
-          type="link"
-          icon={<EditOutlined />}
-          onClick={() => handleEdit(record)}
-        >
-          Edit
-        </Button>
+        <Space size={4}>
+          <Tooltip title="Edit Tenant">
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Tenant Settings">
+            <Button
+              type="link"
+              icon={<SettingOutlined />}
+              onClick={() => navigate(`/admin/tenants/${record.code}/settings`)}
+              style={{ color: '#7A6068' }}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ];
@@ -238,7 +251,7 @@ const TenantsAdmin: React.FC = () => {
             dataSource={filteredTenants}
             rowKey="id"
             pagination={{ pageSize: 15, showSizeChanger: false }}
-            scroll={{ x: 1100 }}
+            scroll={{ x: 1200 }}
           />
         )}
       </Card>

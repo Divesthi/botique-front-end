@@ -34,6 +34,27 @@ export const measurementService = {
     );
     return response.data;
   },
+
+  deleteMeasurement: async (tenantCode: string, measurementId: number): Promise<void> => {
+    await apiClient.delete(`/tenants/${tenantCode}/customers/measurements/${measurementId}`);
+  },
+
+  /**
+   * Share measurement details to the boutique owner via WhatsApp.
+   * @param tenantCode   The tenant's unique code (e.g. "BOUTIQUE_A")
+   * @param measurementId  The measurement record ID
+   * @param toPhoneNumber  E.164 formatted phone number (e.g. "+919448488874")
+   */
+  shareMeasurement: async (
+    tenantCode: string,
+    measurementId: number,
+    toPhoneNumber: string
+  ): Promise<void> => {
+    await apiClient.post(
+      `/tenants/${tenantCode}/customers/measurements/${measurementId}/share`,
+      { toPhoneNumber }
+    );
+  },
 };
 
 export default measurementService;
