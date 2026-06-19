@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   Table,
@@ -13,14 +14,16 @@ import {
   Tag,
   Empty,
   Spin,
+  Tooltip,
 } from 'antd';
-import { PlusOutlined, EditOutlined, SearchOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons';
 import type { Tenant, TenantFormData } from '../../types';
 import { tenantService } from '../../services/tenantService';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
 
 const TenantsAdmin: React.FC = () => {
+  const navigate = useNavigate();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
@@ -102,6 +105,14 @@ const TenantsAdmin: React.FC = () => {
 
   const columns: ColumnsType<Tenant> = [
     {
+      title: 'ID',
+      dataIndex: 'id',
+      key: 'id',
+      width: 70,
+      sorter: (a, b) => (a.id ?? 0) - (b.id ?? 0),
+      defaultSortOrder: 'descend',
+    },
+    {
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
@@ -143,7 +154,6 @@ const TenantsAdmin: React.FC = () => {
         if (!b.startedDate) return -1;
         return dayjs(a.startedDate).valueOf() - dayjs(b.startedDate).valueOf();
       },
-      defaultSortOrder: 'descend',
       render: (date?: string) => (date ? dayjs(date).format('YYYY-MM-DD') : '-'),
     },
     {
@@ -173,37 +183,52 @@ const TenantsAdmin: React.FC = () => {
     {
       title: 'Actions',
       key: 'actions',
-      width: 100,
+      width: 120,
       fixed: 'right',
-      onHeaderCell: () => ({ style: { backgroundColor: '#F0E8E2' } }),
-      onCell: () => ({ style: { backgroundColor: '#ffffff' } }),
       render: (_, record) => (
-        <Button
-          type="link"
-          icon={<EditOutlined />}
-          onClick={() => handleEdit(record)}
-        >
-          Edit
-        </Button>
+        <Space size={4}>
+          <Tooltip title="Edit Tenant">
+            <Button
+              type="link"
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Tenant Settings">
+            <Button
+              type="link"
+              icon={<SettingOutlined />}
+              onClick={() => navigate(`/admin/tenants/${record.code}/settings`)}
+              style={{ color: '#7A6068' }}
+            />
+          </Tooltip>
+        </Space>
       ),
     },
   ];
 
   return (
     <div>
-      <div className="page-header-bar">
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 24,
+        }}
+      >
         <div>
           <h1 style={{ margin: 0 }}>Tenant Management</h1>
           <p style={{ margin: '4px 0 0', color: '#888', fontSize: 13 }}>
             Create and manage boutique tenants on the BQOM platform.
           </p>
         </div>
-        <Space wrap>
+        <Space>
           <Input
             placeholder="Search by name, code or phone"
             prefix={<SearchOutlined />}
             allowClear
-            style={{ width: 250, minWidth: 180 }}
+            style={{ width: 280 }}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -226,7 +251,7 @@ const TenantsAdmin: React.FC = () => {
             dataSource={filteredTenants}
             rowKey="id"
             pagination={{ pageSize: 15, showSizeChanger: false }}
-            scroll={{ x: 1100 }}
+            scroll={{ x: 1200 }}
           />
         )}
       </Card>
@@ -240,7 +265,7 @@ const TenantsAdmin: React.FC = () => {
           setEditingTenant(null);
         }}
         onOk={() => form.submit()}
-        width="min(600px, calc(100vw - 32px))"
+        width={600}
         okText={editingTenant ? 'Update' : 'Create'}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>

@@ -15,6 +15,7 @@ import Orders from './pages/orders/Orders';
 import OrderView from './pages/orders/OrderView';
 import Bills from './pages/bills/Bills';
 import BillView from './pages/bills/BillView';
+import TenantSettings from './pages/admin/TenantSettings';
 
 // Guard: redirect to /login if no tenant code is set
 const RequireTenant: React.FC = () => {
@@ -42,6 +43,7 @@ function App() {
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<Navigate to="/admin/tenants" replace />} />
               <Route path="tenants" element={<TenantsAdmin />} />
+              <Route path="tenants/:code/settings" element={<TenantSettings />} />
             </Route>
 
             {/* Protected: require tenant code */}
