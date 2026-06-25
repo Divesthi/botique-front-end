@@ -549,7 +549,7 @@ const MeasurementView: React.FC = () => {
         <p style={{ marginBottom: 16, color: '#7A6068' }}>
           The measurement details for{' '}
           <strong>{measurement.name}</strong> ({measurement.dressType}) will be
-          sent to the boutique owner's phone number via WhatsApp.
+          sent to the boutique owner's phone number.
         </p>
 
         <Form form={shareForm} layout="vertical">
