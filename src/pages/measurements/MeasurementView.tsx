@@ -12,6 +12,7 @@ import {
   Input,
   Select,
   Divider,
+  Tooltip,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -19,6 +20,7 @@ import {
   PlusOutlined,
   MinusCircleOutlined,
   ShareAltOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import type { CustomerMeasurement, Customer } from '../../types';
 import { measurementService } from '../../services/measurementService';
@@ -54,6 +56,19 @@ const sortedMeasurementEntries = (measurement: Record<string, any>): [string, an
   return ordered;
 };
 
+// ── Validates whether a channel config object has all required fields ────────
+const isWhatsAppConfigValid = (config: any): boolean =>
+  !!config &&
+  !!config.phoneNumberId?.trim() &&
+  !!config.wabaId?.trim() &&
+  !!config.accessToken?.trim() &&
+  !!config.businessPhoneNumber?.trim();
+
+const isTelegramConfigValid = (config: any): boolean =>
+  !!config &&
+  !!config.botToken?.trim() &&
+  !!config.chatId?.trim();
+
 const MeasurementView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -64,6 +79,11 @@ const MeasurementView: React.FC = () => {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // ── Share config state ───────────────────────────────────────────────────
+  const [shareEnabled, setShareEnabled] = useState(false);
+  const [shareDisabledReason, setShareDisabledReason] = useState('');
+  const [shareConfigLoading, setShareConfigLoading] = useState(true);
 
   // Edit modal state
   const [editModalVisible, setEditModalVisible] = useState(false);
@@ -77,7 +97,57 @@ const MeasurementView: React.FC = () => {
 
   useEffect(() => {
     loadMeasurementData();
+    loadShareConfig();
   }, [id]);
+
+  // ── Fetch tenant notification preferences + channel config ───────────────
+  const loadShareConfig = async () => {
+    try {
+      setShareConfigLoading(true);
+
+      const tenant = await tenantService.getTenantByCode(tenantCode);
+      const channel = tenant.preferences?.notifications?.channel;
+
+      if (!channel) {
+        setShareEnabled(false);
+        setShareDisabledReason('No notification channel is configured for this tenant. Set one up in Tenant Settings.');
+        return;
+      }
+
+      if (channel === 'whatsapp') {
+        const config = await tenantService.getWhatsAppConfig(tenantCode);
+        if (isWhatsAppConfigValid(config)) {
+          setShareEnabled(true);
+          setShareDisabledReason('');
+        } else {
+          setShareEnabled(false);
+          setShareDisabledReason('WhatsApp is selected as the notification channel but its configuration is incomplete. Please complete it in Tenant Settings.');
+        }
+        return;
+      }
+
+      if (channel === 'telegram') {
+        const config = await tenantService.getTelegramConfig(tenantCode);
+        if (isTelegramConfigValid(config)) {
+          setShareEnabled(true);
+          setShareDisabledReason('');
+        } else {
+          setShareEnabled(false);
+          setShareDisabledReason('Telegram is selected as the notification channel but its configuration is incomplete. Please complete it in Tenant Settings.');
+        }
+        return;
+      }
+
+      // Unknown / unsupported channel
+      setShareEnabled(false);
+      setShareDisabledReason(`Notification channel "${channel}" is not supported.`);
+    } catch {
+      setShareEnabled(false);
+      setShareDisabledReason('Unable to verify notification channel configuration. Please try again later.');
+    } finally {
+      setShareConfigLoading(false);
+    }
+  };
 
   const loadMeasurementData = async () => {
     if (!id) return;
@@ -179,12 +249,10 @@ const MeasurementView: React.FC = () => {
 
   // ── Share handlers ───────────────────────────────────────────────────────
   const handleShareOpen = async () => {
-    // Pre-fill with the boutique owner's phone number from the tenant profile
     let ownerPhone = '';
     try {
       const tenant = await tenantService.getTenantByCode(tenantCode);
       if (tenant?.phoneNumber) {
-        // Ensure E.164 format expected by the API (+91XXXXXXXXXX)
         ownerPhone = tenant.phoneNumber.startsWith('+')
           ? tenant.phoneNumber
           : `+91${tenant.phoneNumber}`;
@@ -204,7 +272,7 @@ const MeasurementView: React.FC = () => {
     try {
       await shareForm.validateFields();
     } catch {
-      return; // Ant Design already shows field-level errors
+      return;
     }
 
     const { toPhoneNumber } = shareForm.getFieldsValue();
@@ -248,6 +316,24 @@ const MeasurementView: React.FC = () => {
     );
   }
 
+  // ── Share button with tooltip when disabled ───────────────────────────────
+  const shareButton = (
+    <Tooltip
+      title={!shareEnabled && !shareConfigLoading ? shareDisabledReason : ''}
+      placement="bottom"
+    >
+      <Button
+        type="primary"
+        icon={shareEnabled ? <ShareAltOutlined /> : <WarningOutlined />}
+        onClick={handleShareOpen}
+        disabled={!shareEnabled || shareConfigLoading}
+        loading={shareConfigLoading}
+      >
+        Share Measurement
+      </Button>
+    </Tooltip>
+  );
+
   // ── Main render ──────────────────────────────────────────────────────────
   return (
     <div>
@@ -262,12 +348,7 @@ const MeasurementView: React.FC = () => {
             Edit Measurement
           </Button>
 
-          <Button type="primary" 
-            icon={<ShareAltOutlined />}
-            onClick={handleShareOpen}
-          >
-            Share Measurement
-          </Button>
+          {shareButton}
         </Space>
       </div>
 
