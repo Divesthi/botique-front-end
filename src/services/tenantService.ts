@@ -25,6 +25,21 @@ export interface TenantPreferences {
   notifications?: NotificationPreferences;
 }
 
+export interface InstagramConfig {
+  connected: true;
+  igUserId: string;
+  igUsername: string | null;
+  tokenExpiry: string;
+  connectedAt: string;
+  updatedAt: string;
+}
+
+export interface InstagramNotConnected {
+  connected: false;
+}
+
+export type InstagramStatus = InstagramConfig | InstagramNotConnected;
+
 const TENANTS_ENDPOINT = '/tenants';
 
 export const tenantService = {
@@ -82,6 +97,62 @@ export const tenantService = {
 
   saveTelegramConfig: async (code: string, config: TelegramConfig): Promise<void> => {
     await apiClient.post(`${TENANTS_ENDPOINT}/${code}/telegram/config`, config);
+  },
+
+  getInstagramAuthUrl: async (code: string): Promise<{ authUrl: string }> => {
+    console.log(apiClient.get<{ authUrl: string }>(
+      `${TENANTS_ENDPOINT}/${code}/instagram/auth-url`
+    ));
+    const response = await apiClient.get<{ authUrl: string }>(
+      `${TENANTS_ENDPOINT}/${code}/instagram/auth-url`
+    );
+    return response.data;
+  },
+
+  getInstagramConfig: async (code: string): Promise<InstagramStatus> => {
+    const response = await apiClient.get<InstagramStatus>(
+      `${TENANTS_ENDPOINT}/${code}/instagram/config`
+    );
+    return response.data;
+  },
+
+  disconnectInstagram: async (code: string): Promise<void> => {
+    await apiClient.delete(`${TENANTS_ENDPOINT}/${code}/instagram/config`);
+  },
+
+  /**
+   * Post a feed or carousel to Instagram on behalf of the tenant.
+   * The backend responds with 202 Accepted — posting happens asynchronously.
+   *
+   * @param code      Tenant code
+   * @param images    1–10 File objects (JPEG or PNG, max 10 MB each)
+   * @param caption   Optional caption (max 2,200 characters)
+   */
+  postInstagramMedia: async (
+    code: string,
+    images: File[],
+    caption?: string,
+    onUploadProgress?: (percent: number) => void,
+  ): Promise<void> => {
+    const formData = new FormData();
+    images.forEach((file) => formData.append('images', file));
+    if (caption?.trim()) {
+      formData.append('caption', caption.trim());
+    }
+
+    await apiClient.post(
+      `${TENANTS_ENDPOINT}/${code}/instagram/posts`,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        onUploadProgress: (progressEvent) => {
+          if (onUploadProgress && progressEvent.total) {
+            const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onUploadProgress(percent);
+          }
+        },
+      },
+    );
   },
 };
 
