@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Card,
   Button,
@@ -14,6 +14,8 @@ import {
   Radio,
   Alert,
   Typography,
+  Modal,
+  Skeleton,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -22,18 +24,250 @@ import {
   SendOutlined,
   BellOutlined,
   CheckCircleOutlined,
+  InstagramOutlined,
+  LinkOutlined,
+  DisconnectOutlined,
+  ExclamationCircleOutlined,
 } from '@ant-design/icons';
+import dayjs from 'dayjs';
 import {
   tenantService,
   type WhatsAppConfig,
   type TelegramConfig,
   type NotificationChannel,
+  type InstagramStatus,
+  type InstagramConfig,
 } from '../../services/tenantService';
 
 const { Title, Text } = Typography;
 
 type ChannelOption = NotificationChannel | 'none';
 
+// ── Instagram error reason messages ──────────────────────────────────────────
+const INSTAGRAM_ERROR_MESSAGES: Record<string, { type: 'error' | 'info'; text: string }> = {
+  no_ig_business_account: {
+    type: 'error',
+    text: 'No Instagram Business Account is linked to your Facebook Page. Please set this up in Meta Business Suite first, then try again.',
+  },
+  token_exchange_failed: {
+    type: 'error',
+    text: 'Connection failed due to a Meta API error. Please try again.',
+  },
+  state_expired: {
+    type: 'error',
+    text: 'The login window expired. Please try connecting again.',
+  },
+  state_invalid: {
+    type: 'error',
+    text: 'Connection failed — invalid security token. Please try again.',
+  },
+  access_denied: {
+    type: 'info',
+    text: 'Connection cancelled. You can connect your Instagram account any time from this page.',
+  },
+};
+
+// ── InstagramCard component ───────────────────────────────────────────────────
+interface InstagramCardProps {
+  tenantCode: string;
+}
+
+const InstagramCard: React.FC<InstagramCardProps> = ({ tenantCode }) => {
+  const [status, setStatus] = useState<InstagramStatus | null>(null);
+  const [configLoading, setConfigLoading] = useState(true);
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [disconnectLoading, setDisconnectLoading] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Load instagram config on mount
+  const loadConfig = async () => {
+    try {
+      setConfigLoading(true);
+      const config = await tenantService.getInstagramConfig(tenantCode);
+      setStatus(config);
+    } catch {
+      // If config fetch fails, treat as not connected
+      setStatus({ connected: false });
+    } finally {
+      setConfigLoading(false);
+    }
+  };
+
+  // Handle callback query params on mount
+  useEffect(() => {
+    const instagramParam = searchParams.get('instagram');
+    const reasonParam = searchParams.get('reason');
+
+    if (instagramParam === 'connected') {
+      message.success('Instagram account connected successfully');
+      // Clean URL immediately
+      window.history.replaceState({}, '', window.location.pathname);
+      // Load fresh config to show the connected account
+      loadConfig();
+    } else if (instagramParam === 'error' && reasonParam) {
+      const errorInfo = INSTAGRAM_ERROR_MESSAGES[reasonParam] ?? {
+        type: 'error',
+        text: 'An unexpected error occurred. Please try again.',
+      };
+      if (errorInfo.type === 'error') {
+        message.error(errorInfo.text, 6);
+      } else {
+        message.info(errorInfo.text, 6);
+      }
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+      loadConfig();
+    } else {
+      loadConfig();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleConnect = async () => {
+    try {
+      setConnectLoading(true);
+      console.log(tenantService.getInstagramAuthUrl(tenantCode));
+      const { authUrl } = await tenantService.getInstagramAuthUrl(tenantCode);
+      window.location.href = authUrl;
+    } catch {
+      message.error('Failed to initiate Instagram connection. Please try again.');
+      setConnectLoading(false);
+    }
+  };
+
+  const handleDisconnect = () => {
+    Modal.confirm({
+      title: 'Disconnect Instagram Account?',
+      icon: <ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />,
+      content:
+        'Are you sure you want to disconnect your Instagram account? You will not be able to post until you reconnect.',
+      okText: 'Disconnect',
+      okButtonProps: { danger: true },
+      cancelText: 'Cancel',
+      onOk: async () => {
+        try {
+          setDisconnectLoading(true);
+          await tenantService.disconnectInstagram(tenantCode);
+          setStatus({ connected: false });
+          message.success('Instagram account disconnected successfully.');
+        } catch (err: any) {
+          if (err?.response?.status === 404) {
+            message.error('No Instagram connection found.');
+          } else {
+            message.error('Failed to disconnect. Please try again.');
+          }
+        } finally {
+          setDisconnectLoading(false);
+        }
+      },
+    });
+  };
+
+  // ── Expiry warning ──────────────────────────────────────────────────────────
+  const renderExpiryWarning = (config: InstagramConfig) => {
+    const daysUntilExpiry = dayjs(config.tokenExpiry).diff(dayjs(), 'day');
+    if (daysUntilExpiry <= 15) {
+      return (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginTop: 12 }}
+          message={`Your connection will expire on ${dayjs(config.tokenExpiry).format('DD MMM YYYY')}. Reconnect to avoid disruption.`}
+        />
+      );
+    }
+    return null;
+  };
+
+  // ── Card body ───────────────────────────────────────────────────────────────
+  const renderCardContent = () => {
+    if (configLoading) {
+      return (
+        <div style={{ padding: '8px 0' }}>
+          <Skeleton active paragraph={{ rows: 2 }} />
+        </div>
+      );
+    }
+
+    if (!status || !status.connected) {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Text type="secondary" style={{ fontSize: 13 }}>
+            Connect your Instagram Business Account to enable posting directly from BQOM.
+          </Text>
+          <div>
+            <Button
+              type="primary"
+              icon={<LinkOutlined />}
+              loading={connectLoading}
+              onClick={handleConnect}
+              style={{
+                background: 'linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%)',
+                border: 'none',
+              }}
+            >
+              Connect Instagram
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Connected state
+    const config = status as InstagramConfig;
+    const displayName = config.igUsername ? `@${config.igUsername}` : `Account ID: ${config.igUserId}`;
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Tag
+            icon={<CheckCircleOutlined />}
+            color="success"
+            style={{ fontSize: 13, padding: '2px 10px' }}
+          >
+            Connected
+          </Tag>
+          <Text strong style={{ fontSize: 15 }}>
+            {displayName}
+          </Text>
+        </div>
+        <Text type="secondary" style={{ fontSize: 12 }}>
+          Connected on {dayjs(config.connectedAt).format('DD MMM YYYY')}
+        </Text>
+        {renderExpiryWarning(config)}
+        <div style={{ marginTop: 8 }}>
+          <Button
+            danger
+            icon={<DisconnectOutlined />}
+            loading={disconnectLoading}
+            onClick={handleDisconnect}
+          >
+            Disconnect
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <Card
+      title={
+        <Space>
+          <InstagramOutlined style={{ fontSize: 18, color: '#833ab4' }} />
+          <span>Instagram</span>
+        </Space>
+      }
+      style={{ marginBottom: 24 }}
+    >
+      <Text type="secondary" style={{ display: 'block', marginBottom: 16, fontSize: 13 }}>
+        Connect your Instagram Business Account to post content and manage your boutique's presence.
+      </Text>
+      {renderCardContent()}
+    </Card>
+  );
+};
+
+// ── Main TenantSettings component ─────────────────────────────────────────────
 const TenantSettings: React.FC = () => {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
@@ -75,7 +309,6 @@ const TenantSettings: React.FC = () => {
       setSelectedChannel(channel as ChannelOption);
       setSavedChannel(channel as ChannelOption);
 
-      // Pre-load config for the active channel
       if (channel === 'whatsapp') {
         await loadWhatsAppConfig();
       } else if (channel === 'telegram') {
@@ -108,7 +341,6 @@ const TenantSettings: React.FC = () => {
     setTelegramLoaded(true);
   };
 
-  // When user switches channel selection, lazy-load that channel's config
   const handleChannelChange = async (value: ChannelOption) => {
     setSelectedChannel(value);
     if (value === 'whatsapp' && !whatsappLoaded) await loadWhatsAppConfig();
@@ -192,6 +424,9 @@ const TenantSettings: React.FC = () => {
         </div>
       </div>
 
+      {/* ── Instagram Card ──────────────────────────────────── */}
+      {code && <InstagramCard tenantCode={code} />}
+
       {/* ── Notifications Feature Card ──────────────────────── */}
       <Card
         title={
@@ -240,7 +475,7 @@ const TenantSettings: React.FC = () => {
           </Radio.Group>
         </div>
 
-        {/* Save channel button — only show when changed */}
+        {/* Save channel button */}
         {channelChanged && (
           <Alert
             type="info"
@@ -280,7 +515,6 @@ const TenantSettings: React.FC = () => {
             </Divider>
 
             {hasWhatsappConfig && !whatsappEditing ? (
-              /* Read-only summary */
               <div>
                 <Alert
                   type="success"
@@ -288,15 +522,11 @@ const TenantSettings: React.FC = () => {
                   message="WhatsApp is configured and ready."
                   style={{ marginBottom: 16 }}
                 />
-                <Button
-                  onClick={() => setWhatsappEditing(true)}
-                  style={{ marginRight: 8 }}
-                >
+                <Button onClick={() => setWhatsappEditing(true)} style={{ marginRight: 8 }}>
                   Edit Configuration
                 </Button>
               </div>
             ) : (
-              /* Edit form */
               <Form
                 form={whatsappForm}
                 layout="vertical"
@@ -376,9 +606,7 @@ const TenantSettings: React.FC = () => {
                   message="Telegram is configured and ready."
                   style={{ marginBottom: 16 }}
                 />
-                <Button onClick={() => setTelegramEditing(true)}>
-                  Edit Configuration
-                </Button>
+                <Button onClick={() => setTelegramEditing(true)}>Edit Configuration</Button>
               </div>
             ) : (
               <Form
