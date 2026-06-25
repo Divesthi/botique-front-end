@@ -87,7 +87,7 @@ export const tenantService = {
   getTelegramConfig: async (code: string): Promise<TelegramConfig | null> => {
     try {
       const response = await apiClient.get<TelegramConfig>(
-        `${TENANTS_ENDPOINT}/${code}/telegram/config`
+        `${TENANTS_ENDPOINT}/${code}/telegram-config`
       );
       return response.data;
     } catch {
@@ -96,7 +96,7 @@ export const tenantService = {
   },
 
   saveTelegramConfig: async (code: string, config: TelegramConfig): Promise<void> => {
-    await apiClient.post(`${TENANTS_ENDPOINT}/${code}/telegram/config`, config);
+    await apiClient.post(`${TENANTS_ENDPOINT}/${code}/telegram-config`, config);
   },
 
   getInstagramAuthUrl: async (code: string): Promise<{ authUrl: string }> => {
