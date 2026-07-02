@@ -206,10 +206,10 @@ const Customers: React.FC = () => {
             label="Mobile Number"
             rules={[
               { required: true, message: 'Please enter mobile number' },
-              { pattern: /^[0-9]{10}$/, message: 'Please enter valid 10-digit mobile number' },
+              { pattern: /^\+?[0-9]{7,15}$/, message: 'Please enter a valid mobile number (7-15 digits, optional +country code)' },
             ]}
           >
-            <Input placeholder="Enter 10-digit mobile number" maxLength={10} />
+            <Input placeholder="e.g. +14155552671 or 9876543210" maxLength={16} />
           </Form.Item>
 
           <Form.Item name="address" label="Address">
@@ -220,10 +220,10 @@ const Customers: React.FC = () => {
             name="alternateContactNo"
             label="Alternate Contact Number"
             rules={[
-              { pattern: /^[0-9]{10}$/, message: 'Please enter valid 10-digit mobile number' },
+              { pattern: /^\+?[0-9]{7,15}$/, message: 'Please enter a valid mobile number (7-15 digits, optional +country code)' },
             ]}
           >
-            <Input placeholder="Enter 10-digit alternate contact number" maxLength={10} />
+            <Input placeholder="e.g. +14155552671 or 9876543210" maxLength={16} />
           </Form.Item>
         </Form>
       </Modal>
