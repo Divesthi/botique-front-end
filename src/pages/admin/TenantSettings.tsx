@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Card,
   Button,
   Space,
   Spin,
@@ -10,13 +9,11 @@ import {
   Form,
   Input,
   Switch,
-  Radio,
   Alert,
   Typography,
   Modal,
   Skeleton,
   Divider,
-  Badge,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -29,7 +26,6 @@ import {
   LinkOutlined,
   DisconnectOutlined,
   ExclamationCircleOutlined,
-  SettingOutlined,
   RightOutlined,
   ApiOutlined,
   EditOutlined,
@@ -73,17 +69,6 @@ const INSTAGRAM_ERROR_MESSAGES: Record<string, { type: 'error' | 'info'; text: s
     text: 'Connection cancelled. You can connect your Instagram account any time from this page.',
   },
 };
-
-// ── Validators ────────────────────────────────────────────────────────────────
-const isWhatsAppConfigValid = (config: any): boolean =>
-  !!config &&
-  !!config.phoneNumberId?.trim() &&
-  !!config.wabaId?.trim() &&
-  !!config.accessToken?.trim() &&
-  !!config.businessPhoneNumber?.trim();
-
-const isTelegramConfigValid = (config: any): boolean =>
-  !!config && !!config.botToken?.trim() && !!config.chatId?.trim();
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -267,7 +252,6 @@ const InstagramSection: React.FC<InstagramSectionProps> = ({ tenantCode }) => {
   const [configLoading, setConfigLoading] = useState(true);
   const [connectLoading, setConnectLoading] = useState(false);
   const [disconnectLoading, setDisconnectLoading] = useState(false);
-  const [, setSearchParams] = useSearchParams();
 
   const loadConfig = async () => {
     try {
