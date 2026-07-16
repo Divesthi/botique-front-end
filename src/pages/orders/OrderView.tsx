@@ -37,6 +37,7 @@ import { customerService } from '../../services/customerService';
 import { measurementService } from '../../services/measurementService';
 import { tenantService } from '../../services/tenantService';
 import { useAuth } from '../../context/AuthContext';
+import { formatCurrency } from '../../utils/format';
 import dayjs from 'dayjs';
 
 const { Dragger } = Upload;
@@ -490,10 +491,10 @@ const OrderView: React.FC = () => {
           </Descriptions.Item>
           <Descriptions.Item label="Total Items">{order.totalItems}</Descriptions.Item>
           <Descriptions.Item label="Total Amount">
-            <strong style={{ fontSize: '16px' }}>₹{order.total.toFixed(2)}</strong>
+            <strong style={{ fontSize: '16px' }}>₹{formatCurrency(order.total)}</strong>
           </Descriptions.Item>
-          <Descriptions.Item label="Advance Paid">₹{order.advance.toFixed(2)}</Descriptions.Item>
-          <Descriptions.Item label="Balance Amount">₹{order.balance.toFixed(2)}</Descriptions.Item>
+          <Descriptions.Item label="Advance Paid">₹{formatCurrency(order.advance)}</Descriptions.Item>
+          <Descriptions.Item label="Balance Amount">₹{formatCurrency(order.balance)}</Descriptions.Item>
           <Descriptions.Item label="Remarks" span={2}>
             {order.remarks || '-'}
           </Descriptions.Item>
@@ -521,11 +522,11 @@ const OrderView: React.FC = () => {
                   </Descriptions.Item>
                   <Descriptions.Item label="Quantity">{item.quantity}</Descriptions.Item>
                   <Descriptions.Item label="Cost Per Quantity">
-                    ₹{item.costPerQuantity.toFixed(2)}
+                    ₹{formatCurrency(item.costPerQuantity)}
                   </Descriptions.Item>
                   <Descriptions.Item label="Total Item Cost" span={2}>
                     <strong style={{ fontSize: '14px' }}>
-                      ₹{(item.quantity * item.costPerQuantity).toFixed(2)}
+                      {formatCurrency((item.quantity || 0) * (item.costPerQuantity || 0))}
                     </strong>
                   </Descriptions.Item>
                   {item.remarks && (
@@ -575,7 +576,7 @@ const OrderView: React.FC = () => {
                           dataIndex: 'cost',
                           key: 'cost',
                           width: '30%',
-                          render: (cost: number) => `₹${cost.toFixed(2)}`,
+                          render: (cost: number) => `₹${formatCurrency(cost)}`,
                         },
                         {
                           title: 'Remarks',
@@ -593,7 +594,7 @@ const OrderView: React.FC = () => {
                               <strong>Total Cost Breakdown</strong>
                             </Table.Summary.Cell>
                             <Table.Summary.Cell index={1}>
-                              <strong>₹{total.toFixed(2)}</strong>
+                              <strong>₹{formatCurrency(total)}</strong>
                             </Table.Summary.Cell>
                             <Table.Summary.Cell index={2} />
                           </Table.Summary.Row>
