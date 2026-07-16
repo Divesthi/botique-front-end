@@ -20,6 +20,7 @@ import {
   Progress,
   Typography,
   Alert,
+  Tooltip,
 } from 'antd';
 import {
   ArrowLeftOutlined,
@@ -29,13 +30,14 @@ import {
   SaveOutlined,
   InstagramOutlined,
   InboxOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload';
 import type { Order, Customer, CustomerMeasurement, OrderItem } from '../../types';
 import { orderService } from '../../services/orderService';
 import { customerService } from '../../services/customerService';
 import { measurementService } from '../../services/measurementService';
-import { tenantService } from '../../services/tenantService';
+import { tenantService, type InstagramStatus } from '../../services/tenantService';
 import { useAuth } from '../../context/AuthContext';
 import { formatCurrency } from '../../utils/format';
 import dayjs from 'dayjs';
@@ -82,11 +84,26 @@ const OrderView: React.FC = () => {
   const [igUploadPercent, setIgUploadPercent] = useState(0);
   // Keeps the raw File references in insertion order, keyed by uid
   const igFilesRef = useRef<Map<string, File>>(new Map());
+  const [igConfig, setIgConfig] = useState<InstagramStatus | null>(null);
+  const [igConfigLoading, setIgConfigLoading] = useState(true);
 
   // ── Load data ────────────────────────────────────────────────────────────
   useEffect(() => {
     loadOrderData();
+    loadInstagramConfig();
   }, [id]);
+
+  const loadInstagramConfig = async () => {
+    try {
+      setIgConfigLoading(true);
+      const config = await tenantService.getInstagramConfig(tenantCode);
+      setIgConfig(config);
+    } catch {
+      setIgConfig({ connected: false });
+    } finally {
+      setIgConfigLoading(false);
+    }
+  };
 
   const loadOrderData = async () => {
     if (!id) return;
@@ -223,10 +240,17 @@ const OrderView: React.FC = () => {
     }
   };
 
+  const igConnected = igConfig?.connected === true;
+  const igDisabledReason = 'Instagram is not connected for this tenant. Connect it in Tenant Settings → Integrations.';
+
   // ── Instagram post handlers ──────────────────────────────────────────────
 
   /** Opens the Instagram post modal and resets all its state. */
   const handleOpenIgModal = () => {
+    if (!igConnected) {
+      message.warning('Instagram is not connected for this tenant. Connect it in Tenant Settings → Integrations.');
+      return;
+    }
     setIgFileList([]);
     setIgCaption('');
     setIgUploadPercent(0);
@@ -447,13 +471,17 @@ const OrderView: React.FC = () => {
           <Button type="primary" icon={<EditOutlined />} onClick={handleEdit}>
             Edit Order
           </Button>
-          <Button
-            icon={<InstagramOutlined />}
-            onClick={handleOpenIgModal}
-            type="primary"
-          >
-            Post in Instagram
-          </Button>
+          <Tooltip title={!igConnected && !igConfigLoading ? igDisabledReason : ''}>
+            <Button
+              icon={igConnected ? <InstagramOutlined /> : <WarningOutlined />}
+              onClick={handleOpenIgModal}
+              type="primary"
+              disabled={!igConnected || igConfigLoading}
+              loading={igConfigLoading}
+            >
+              Post in Instagram
+            </Button>
+          </Tooltip>
         </Space>
       </div>
 
