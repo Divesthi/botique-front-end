@@ -83,6 +83,11 @@ const Orders: React.FC = () => {
     setSearchParams({});
   };
 
+  const formatCurrency = (amount: number | null | undefined): string => {
+    const safeAmount = typeof amount === 'number' && Number.isFinite(amount) ? amount : 0;
+    return `₹${safeAmount.toFixed(2)}`;
+  };
+
   // Get filter label for display
   const getFilterLabel = (filter: string | null) => {
     const labels: Record<string, string> = {
@@ -323,21 +328,21 @@ const Orders: React.FC = () => {
       dataIndex: 'total',
       key: 'total',
       width: 120,
-      render: (amount: number) => `₹${amount.toFixed(2)}`,
+      render: (amount: number) => formatCurrency(amount),
     },
     {
       title: 'Advance',
       dataIndex: 'advance',
       key: 'advance',
       width: 120,
-      render: (amount: number) => `₹${amount.toFixed(2)}`,
+      render: (amount: number) => formatCurrency(amount),
     },
     {
       title: 'Balance',
       dataIndex: 'balance',
       key: 'balance',
       width: 120,
-      render: (amount: number) => `₹${amount.toFixed(2)}`,
+      render: (amount: number) => formatCurrency(amount),
     },
     {
       title: 'Status',
