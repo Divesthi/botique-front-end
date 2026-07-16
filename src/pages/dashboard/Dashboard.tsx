@@ -12,6 +12,7 @@ import type { Order } from '../../types';
 import { orderService } from '../../services/orderService';
 import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
+import { formatCurrency } from '../../utils/format';
 import dayjs from 'dayjs';
 
 const Dashboard: React.FC = () => {
@@ -165,21 +166,21 @@ const Dashboard: React.FC = () => {
       dataIndex: 'total',
       key: 'total',
       width: 120,
-      render: (amount: number) => `₹${amount.toFixed(2)}`,
+      render: (amount: number) => formatCurrency(amount),
     },
     {
       title: 'Advance',
       dataIndex: 'advance',
       key: 'advance',
       width: 120,
-      render: (amount: number) => `₹${amount.toFixed(2)}`,
+      render: (amount: number) => formatCurrency(amount),
     },
     {
       title: 'Balance',
       dataIndex: 'balance',
       key: 'balance',
       width: 120,
-      render: (amount: number) => `₹${amount.toFixed(2)}`,
+      render: (amount: number) => formatCurrency(amount),
     },
     {
       title: 'Status',

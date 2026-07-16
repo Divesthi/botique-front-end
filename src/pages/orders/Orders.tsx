@@ -25,6 +25,7 @@ import { customerService } from '../../services/customerService';
 import { measurementService } from '../../services/measurementService';
 import { useAuth } from '../../context/AuthContext';
 import type { ColumnsType } from 'antd/es/table';
+import { formatCurrency } from '../../utils/format';
 import dayjs from 'dayjs';
 
 const { RangePicker } = DatePicker;
@@ -81,11 +82,6 @@ const Orders: React.FC = () => {
   // Clear dashboard filter
   const clearDashboardFilter = () => {
     setSearchParams({});
-  };
-
-  const formatCurrency = (amount: number | null | undefined): string => {
-    const safeAmount = typeof amount === 'number' && Number.isFinite(amount) ? amount : 0;
-    return `₹${safeAmount.toFixed(2)}`;
   };
 
   // Get filter label for display
